@@ -7,6 +7,7 @@ const navItems = [
   { label: 'Projects', href: '/admin/projects' },
   { label: 'Invoices', href: '/admin/invoices' },
   { label: 'Support', href: '/admin/support' },
+  { label: 'Clients', href: '/admin/clients' },
 ]
 
 export default function AdminLayout({

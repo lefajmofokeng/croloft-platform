@@ -31,6 +31,15 @@ export default function LoginPage() {
     router.push('/portal')
     router.refresh()
   }
+              
+  async function handleGoogleLogin() {
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    })
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center p-8">
@@ -69,6 +78,27 @@ export default function LoginPage() {
           {loading ? 'Logging in...' : 'Log in'}
         </button>
       </form>
+
+        <div className="relative py-2 text-center text-sm text-gray-400">
+          <span className="bg-white px-2">or</span>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleGoogleLogin}
+          className="w-full rounded border border-gray-300 p-2 text-sm font-medium hover:bg-gray-50"
+        >
+          Continue with Google
+        </button>
+
+        <p className="text-center text-sm">
+          <a href="/forgot-password" className="text-blue-600 hover:underline">Forgot password?</a>
+        </p>
+
+        <p className="mt-4 text-center text-sm text-gray-500">
+          Don&apos;t have an account?{' '}
+          <a href="/signup" className="text-blue-600 hover:underline">Sign up</a>
+        </p>
     </div>
   )
 }

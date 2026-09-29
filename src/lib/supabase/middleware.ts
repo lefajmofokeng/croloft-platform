@@ -53,5 +53,27 @@ export async function updateSession(request: NextRequest) {
     }
   }
 
+    // Logged in as a client with an incomplete profile — force them to finish setup
+  if (user && path.startsWith('/portal')) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('province')
+      .eq('id', user.id)
+      .single()
+
+    if (profile && !profile.province) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/complete-profile'
+      return NextResponse.redirect(url)
+    }
+  }
+
+  // complete-profile itself needs a logged-in user, even though it's outside /portal
+  if (!user && path === '/complete-profile') {
+    const url = request.nextUrl.clone()
+    url.pathname = '/login'
+    return NextResponse.redirect(url)
+  }
+
   return supabaseResponse
 }

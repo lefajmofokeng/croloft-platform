@@ -1,5 +1,6 @@
 import LogoutButton from '@/components/logout-button'
 import Link from 'next/link'
+import { createClient } from '@/lib/supabase/server'
 
 const navItems = [
   { label: 'Dashboard', href: '/portal' },
@@ -8,11 +9,23 @@ const navItems = [
   { label: 'Support', href: '/portal/support' },
 ]
 
-export default function PortalLayout({
+export default async function PortalLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('full_name, email')
+    .eq('id', user!.id)
+    .single()
+
   return (
     <div className="flex min-h-screen">
       <aside className="w-56 shrink-0 border-r bg-gray-900 text-white">
@@ -33,7 +46,10 @@ export default function PortalLayout({
       </aside>
 
       <div className="flex-1">
-        <div className="flex items-center justify-end border-b p-4">
+        <div className="flex items-center justify-between border-b p-4">
+          <span className="text-sm text-gray-600">
+            {profile?.full_name || profile?.email}
+          </span>
           <LogoutButton />
         </div>
         <main>{children}</main>

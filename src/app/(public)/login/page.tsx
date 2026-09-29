@@ -23,7 +23,7 @@ export default function LoginPage() {
     })
 
     if (error) {
-      setError(error.message)
+      setError("We couldn't log you in with those details. Check your email and password, or sign up if you don't have an account yet.")
       setLoading(false)
       return
     }
@@ -68,7 +68,14 @@ export default function LoginPage() {
           />
         </div>
 
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && (
+          <p className="text-sm text-red-600">
+            {error}{' '}
+            {error.includes('sign up') && (
+              <a href="/signup" className="underline">Create one here.</a>
+            )}
+          </p>
+        )}
 
         <button
           type="submit"

@@ -22,7 +22,19 @@ type Product = {
   pricing_addons: Addon[]
 }
 
-export default function AdminQuoteCalculator({ product, clientId }: { product: Product; clientId: string }) {
+export default function AdminQuoteCalculator({
+  product,
+  clientId,
+  guestName,
+  guestEmail,
+  guestPhone,
+}: {
+  product: Product
+  clientId?: string
+  guestName?: string
+  guestEmail?: string
+  guestPhone?: string
+}) {
   const router = useRouter()
 
   const [dropdownSelections, setDropdownSelections] = useState<Record<string, string>>(() => {
@@ -75,12 +87,15 @@ export default function AdminQuoteCalculator({ product, clientId }: { product: P
     return { onceOffTotal: onceOff, monthlyTotal: monthly, lineItems: items }
   }, [product, dropdownSelections, numericQuantities])
 
-  async function handleGenerate() {
+    async function handleGenerate() {
     setGenerating(true)
     setError(null)
 
     const result = await adminCreateQuote({
       clientId,
+      guestName,
+      guestEmail,
+      guestPhone,
       productId: product.id,
       productName: product.name,
       lineItems,

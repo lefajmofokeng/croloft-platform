@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { updateProjectDocument, deleteProjectDocument } from './actions'
 import ConfirmSubmitButton from '@/components/confirm-submit-button'
+import DocumentVersionHistory from '@/components/document-version-history'
+import { getDocumentVersionUrl } from './actions'
 
 type Document = {
   id: string
@@ -13,7 +15,9 @@ type Document = {
   created_at: string
 }
 
-export default function DocumentRow({ doc }: { doc: Document }) {
+type Version = { id: string; storage_path: string; file_name: string; replaced_at: string }
+
+export default function DocumentRow({ doc, versions }: { doc: Document; versions: Version[] }) {
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
 
@@ -63,7 +67,7 @@ export default function DocumentRow({ doc }: { doc: Document }) {
       </form>
     )
   }
-
+  
   function extractFileName(storagePath: string): string {
     const parts = storagePath.split('/')
     const fileWithTimestamp = parts[parts.length - 1]
@@ -79,6 +83,7 @@ export default function DocumentRow({ doc }: { doc: Document }) {
         <p className="mt-1 text-xs text-gray-400">
           {new Date(doc.created_at).toLocaleDateString('en-ZA')}
         </p>
+        <DocumentVersionHistory versions={versions} getUrl={getDocumentVersionUrl} />
       </div>
       <div className="flex items-center gap-3">
         <button onClick={() => setEditing(true)} className="text-sm text-gray-500 hover:text-gray-800">
@@ -93,5 +98,5 @@ export default function DocumentRow({ doc }: { doc: Document }) {
         />
       </div>
     </div>
-  )
+  )  
 }

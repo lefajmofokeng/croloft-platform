@@ -38,3 +38,25 @@ export async function getDocumentDownloadUrl(documentId: string) {
 
   return { url: data.signedUrl }
 }
+
+export async function getClientDocumentVersionUrl(storagePath: string, fileName: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not logged in' }
+
+  // storagePath looks like: {projectId}/{filename} — verify ownership via the project
+  const projectId = storagePath.split('/')[0]
+  const { data: project } = await supabase.from('projects').select('client_id').eq('id', projectId).single()
+
+  if (!project || project.client_id !== user.id) {
+    return { error: 'Not authorized' }
+  }
+
+  const admin = createAdminClient()
+  const { data, error } = await admin.storage
+    .from('project-documents')
+    .createSignedUrl(storagePath, 60, { download: fileName })
+
+  if (error || !data) return { error: 'Could not load file' }
+  return { url: data.signedUrl }
+}

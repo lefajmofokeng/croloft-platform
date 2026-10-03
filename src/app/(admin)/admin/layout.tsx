@@ -1,5 +1,6 @@
 import LogoutButton from '@/components/logout-button'
 import Link from 'next/link'
+import AdminSearchBox from '../admin-search-box'
 
 const navItems = [
   { label: 'Pricing', href: '/admin/pricing' },
@@ -35,9 +36,10 @@ export default function AdminLayout({
       </aside>
 
       <div className="flex-1">
-        <div className="flex items-center justify-end border-b p-4">
-          <LogoutButton />
-        </div>
+      <div className="flex items-center justify-between border-b p-4">
+        <AdminSearchBox />
+        <LogoutButton />
+      </div>
         <main>{children}</main>
       </div>
     </div>

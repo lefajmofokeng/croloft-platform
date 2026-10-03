@@ -181,7 +181,6 @@ export async function updateProjectDocument(formData: FormData): Promise<void> {
     description: description?.trim() || null,
   }
 
-  // Only touch the file if a new one was actually selected
   if (file && file.size > 0) {
     const newStoragePath = `${project_id}/${Date.now()}-${file.name}`
 
@@ -191,8 +190,13 @@ export async function updateProjectDocument(formData: FormData): Promise<void> {
 
     if (uploadError) return
 
-    // Remove the old file only after the new one uploads successfully
-    await admin.storage.from('project-documents').remove([old_storage_path])
+    // Log the OLD file as a version instead of deleting it
+    const oldFileName = old_storage_path.split('/').pop()?.replace(/^\d+-/, '') || 'document'
+    await admin.from('project_document_versions').insert({
+      document_id: id,
+      storage_path: old_storage_path,
+      file_name: oldFileName,
+    })
 
     updates.storage_path = newStoragePath
   }
@@ -247,4 +251,21 @@ export async function addInternalNote(formData: FormData): Promise<void> {
   await supabase.from('project_internal_notes').insert({ project_id, note: note.trim() })
 
   revalidatePath(`/admin/projects/${project_id}`)
+}
+
+export async function getDocumentVersionUrl(storagePath: string, fileName: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not logged in' }
+
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  if (profile?.role !== 'admin') return { error: 'Not authorized' }
+
+  const admin = createAdminClient()
+  const { data, error } = await admin.storage
+    .from('project-documents')
+    .createSignedUrl(storagePath, 60, { download: fileName })
+
+  if (error || !data) return { error: 'Could not load file' }
+  return { url: data.signedUrl }
 }

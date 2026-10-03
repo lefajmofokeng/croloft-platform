@@ -1,6 +1,7 @@
 import LogoutButton from '@/components/logout-button'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import PortalSearchBox from '../portal-search-box'
 
 const navItems = [
   { label: 'Dashboard', href: '/portal' },
@@ -49,10 +50,13 @@ export default async function PortalLayout({
 
       <div className="flex-1">
         <div className="flex items-center justify-between border-b p-4">
-          <span className="text-sm text-gray-600">
-            {profile?.full_name || profile?.email}
-          </span>
-          <LogoutButton />
+          <PortalSearchBox />
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-gray-600">
+              {profile?.full_name || profile?.email}
+            </span>
+            <LogoutButton />
+          </div>
         </div>
         <main>{children}</main>
       </div>

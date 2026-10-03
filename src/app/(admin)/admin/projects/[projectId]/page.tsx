@@ -41,7 +41,13 @@ export default async function ProjectDetailPage({
     .from('project_documents')
     .select('*')
     .eq('project_id', projectId)
-    .order('created_at', { ascending: false })  
+    .order('created_at', { ascending: false }) 
+    
+  const { data: allVersions } = await supabase
+    .from('project_document_versions')
+    .select('*')
+    .in('document_id', (documents || []).map((d) => d.id))
+    .order('replaced_at', { ascending: false })  
 
   const { data: changelog } = await supabase
     .from('project_changelog')
@@ -221,6 +227,8 @@ export default async function ProjectDetailPage({
         ))}
       </div>
 
+      {updates?.length === 0 && <p className="text-gray-500">No updates yet.</p>}
+
     <h2 className="mb-3 mt-8 font-semibold">Documents</h2>
       <form
         action={uploadProjectDocument}
@@ -246,13 +254,15 @@ export default async function ProjectDetailPage({
 
       <div className="space-y-2">
         {documents?.map((doc) => (
-          <DocumentRow key={doc.id} doc={doc} />
+          <DocumentRow
+            key={doc.id}
+            doc={doc}
+            versions={(allVersions || []).filter((v) => v.document_id === doc.id)}
+          />
         ))}
       </div>
 
       {documents?.length === 0 && <p className="text-gray-500">No documents yet.</p>}
-
-      {updates?.length === 0 && <p className="text-gray-500">No updates yet.</p>}
     </div>
 
   )

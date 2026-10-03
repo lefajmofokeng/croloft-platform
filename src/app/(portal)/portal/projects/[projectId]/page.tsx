@@ -2,6 +2,8 @@ import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import DocumentDownloadButton from '../document-download-button'
 import PrintSummaryButton from './print-summary-button'
+import DocumentVersionHistory from '@/components/document-version-history'
+import { getClientDocumentVersionUrl } from '../actions'
 
 const statusLabels: Record<string, string> = {
   planning: 'Planning',
@@ -40,6 +42,12 @@ export default async function PortalProjectDetailPage({
     .select('*')
     .eq('project_id', projectId)
     .order('created_at', { ascending: false })
+
+  const { data: allVersions } = await supabase
+    .from('project_document_versions')
+    .select('*')
+    .in('document_id', (documents || []).map((d) => d.id))
+    .order('replaced_at', { ascending: false })  
 
   const { data: changelog } = await supabase
     .from('project_changelog')
@@ -130,17 +138,23 @@ export default async function PortalProjectDetailPage({
       />
     
       <h2 className="mb-3 mt-8 font-semibold">Documents</h2>
-        <div className="space-y-2">
-            {documents?.map((doc) => (
-            <div key={doc.id} className="flex items-center justify-between rounded border p-3">
-                <div>
+      <div className="space-y-2">
+        {documents?.map((doc) => (
+          <div key={doc.id} className="rounded border p-3">
+            <div className="flex items-center justify-between">
+              <div>
                 <p className="font-medium">{doc.name}</p>
                 {doc.description && <p className="text-sm text-gray-500">{doc.description}</p>}
-                </div>
-                <DocumentDownloadButton documentId={doc.id} />
+              </div>
+              <DocumentDownloadButton documentId={doc.id} />
             </div>
-            ))}
-        </div>
+            <DocumentVersionHistory
+              versions={(allVersions || []).filter((v) => v.document_id === doc.id)}
+              getUrl={getClientDocumentVersionUrl}
+            />
+          </div>
+        ))}
+      </div>
 
       {documents?.length === 0 && <p className="text-gray-500">No documents yet.</p>}
     

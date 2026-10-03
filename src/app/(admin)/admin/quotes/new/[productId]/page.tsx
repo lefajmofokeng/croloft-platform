@@ -7,12 +7,12 @@ export default async function AdminQuoteConfigPage({
   searchParams,
 }: {
   params: Promise<{ productId: string }>
-  searchParams: Promise<{ clientId?: string }>
+  searchParams: Promise<{ clientId?: string; guestName?: string; guestEmail?: string; guestPhone?: string }>
 }) {
   const { productId } = await params
-  const { clientId } = await searchParams
+  const { clientId, guestName, guestEmail, guestPhone } = await searchParams
 
-  if (!clientId) {
+  if (!clientId && !(guestName && guestEmail)) {
     notFound()
   }
 
@@ -28,5 +28,13 @@ export default async function AdminQuoteConfigPage({
     notFound()
   }
 
-  return <AdminQuoteCalculator product={product} clientId={clientId} />
+  return (
+    <AdminQuoteCalculator
+      product={product}
+      clientId={clientId}
+      guestName={guestName}
+      guestEmail={guestEmail}
+      guestPhone={guestPhone}
+    />
+  )
 }

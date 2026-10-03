@@ -62,7 +62,10 @@ export async function convertQuoteToProject(formData: FormData): Promise<void> {
 type LineItem = { label: string; price: number; recurring?: boolean }
 
 export async function adminCreateQuote(data: {
-  clientId: string
+  clientId?: string
+  guestName?: string
+  guestEmail?: string
+  guestPhone?: string
   productId: string
   productName: string
   lineItems: LineItem[]
@@ -71,13 +74,26 @@ export async function adminCreateQuote(data: {
 }) {
   const supabase = await createClient()
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('full_name, email')
-    .eq('id', data.clientId)
-    .single()
+  let clientName: string
+  let clientEmail: string
 
-  if (!profile) return { error: 'Client not found' }
+  if (data.clientId) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('full_name, email')
+      .eq('id', data.clientId)
+      .single()
+
+    if (!profile) return { error: 'Client not found' }
+
+    clientName = profile.full_name || profile.email || 'Client'
+    clientEmail = profile.email || ''
+  } else if (data.guestName && data.guestEmail) {
+    clientName = data.guestName
+    clientEmail = data.guestEmail
+  } else {
+    return { error: 'No client specified' }
+  }
 
   const quoteRef = `CRO-${Date.now().toString().slice(-8)}`
 
@@ -85,9 +101,10 @@ export async function adminCreateQuote(data: {
     quote_ref: quoteRef,
     product_id: data.productId,
     product_name: data.productName,
-    client_name: profile.full_name || profile.email,
-    client_email: profile.email,
-    user_id: data.clientId,
+    client_name: clientName,
+    client_email: clientEmail,
+    client_phone: data.guestPhone || null,
+    user_id: data.clientId || null,
     line_items: data.lineItems,
     once_off_total: data.onceOffTotal,
     monthly_total: data.monthlyTotal,

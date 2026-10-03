@@ -2,6 +2,7 @@
 
 type Update = { note: string; created_at: string }
 type ChangelogEntry = { note: string; created_at: string }
+type DocumentInfo = { name: string; description: string | null }
 
 export default function PrintSummaryButton({
   projectName,
@@ -16,6 +17,7 @@ export default function PrintSummaryButton({
   teamContactPhone,
   updates,
   changelog,
+  documents,
 }: {
   projectName: string
   projectNumber: string
@@ -29,6 +31,7 @@ export default function PrintSummaryButton({
   teamContactPhone: string | null
   updates: Update[]
   changelog: ChangelogEntry[]
+  documents: DocumentInfo[]
 }) {
   function handlePrint() {
     const updatesHtml = updates
@@ -105,6 +108,15 @@ export default function PrintSummaryButton({
 
           <h2>Changelog</h2>
           ${changelogHtml}
+
+          <h2>Documents</h2>
+          <p style="font-size:13px;color:#555;margin-bottom:10px;">${documents.length} document(s) on file</p>
+          ${documents.length > 0 ? documents.map((doc) => `
+            <div style="padding:8px 0;border-bottom:1px solid #eee;">
+              <p style="margin:0;font-size:13px;font-weight:bold;">${doc.name}</p>
+              ${doc.description ? `<p style="margin:2px 0 0;font-size:12px;color:#777;">${doc.description}</p>` : ''}
+            </div>
+          `).join('') : '<p style="font-size:13px;color:#999;">No documents yet.</p>'}
         </body>
       </html>
     `

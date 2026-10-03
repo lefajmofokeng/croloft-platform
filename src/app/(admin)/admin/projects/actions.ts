@@ -235,3 +235,16 @@ export async function addChangelogEntry(formData: FormData): Promise<void> {
 
   revalidatePath(`/admin/projects/${project_id}`)
 }
+
+export async function addInternalNote(formData: FormData): Promise<void> {
+  const supabase = await createClient()
+
+  const project_id = formData.get('project_id') as string
+  const note = formData.get('note') as string
+
+  if (!project_id || !note?.trim()) return
+
+  await supabase.from('project_internal_notes').insert({ project_id, note: note.trim() })
+
+  revalidatePath(`/admin/projects/${project_id}`)
+}

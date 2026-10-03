@@ -126,6 +126,7 @@ export default async function PortalProjectDetailPage({
         teamContactPhone={project.team_contact_phone}
         updates={updates || []}
         changelog={changelog || []}
+        documents={(documents || []).map((d) => ({ name: d.name, description: d.description }))}
       />
     
       <h2 className="mb-3 mt-8 font-semibold">Documents</h2>

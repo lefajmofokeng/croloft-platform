@@ -1,8 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
-import { updateProject, deleteProject, addProjectUpdate, uploadProjectDocument, addChangelogEntry } from '../actions'
+import { updateProject, deleteProject, addProjectUpdate, uploadProjectDocument, addChangelogEntry, addInternalNote } from '../actions'
 import DocumentRow from '../document-row'
 import ConfirmSubmitButton from '@/components/confirm-submit-button'
+
 
 const statusLabels: Record<string, string> = {
   planning: 'Planning',
@@ -46,6 +47,12 @@ export default async function ProjectDetailPage({
     .from('project_changelog')
     .select('*')
     .eq('project_id', projectId)
+    .order('created_at', { ascending: false })
+    
+  const { data: internalNotes } = await supabase
+    .from('project_internal_notes')
+    .select('*')
+    .eq('project_id', projectId)
     .order('created_at', { ascending: false })  
   
     return (
@@ -61,6 +68,33 @@ export default async function ProjectDetailPage({
         </div>
         <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
           <div className="h-full bg-blue-600" style={{ width: `${project.progress_percent}%` }} />
+        </div>
+      </div>
+
+      <div className="mb-8 rounded border-2 border-dashed border-amber-300 bg-amber-50 p-4">
+        <h2 className="mb-1 font-semibold text-amber-900">🔒 Internal Notes (never shown to client)</h2>
+        <form action={addInternalNote} className="mb-3 mt-2 flex gap-2">
+          <input type="hidden" name="project_id" value={project.id} />
+          <input
+            type="text"
+            name="note"
+            required
+            placeholder="e.g. Client is slow to respond, follow up Friday"
+            className="flex-1 rounded border border-amber-300 p-2 text-sm"
+          />
+          <button type="submit" className="rounded bg-amber-600 px-4 py-2 text-sm text-white">
+            Add Note
+          </button>
+        </form>
+        <div className="space-y-2">
+          {internalNotes?.map((note) => (
+            <div key={note.id} className="flex items-center justify-between rounded bg-white px-3 py-2 text-sm">
+              <span>{note.note}</span>
+              <span className="text-xs text-gray-400">
+                {new Date(note.created_at).toLocaleString('en-ZA')}
+              </span>
+            </div>
+          ))}
         </div>
       </div>
 

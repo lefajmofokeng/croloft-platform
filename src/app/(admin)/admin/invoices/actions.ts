@@ -64,3 +64,35 @@ export async function deleteInvoice(formData: FormData): Promise<void> {
   revalidatePath('/admin/invoices')
   redirect('/admin/invoices')
 }
+
+type InvoiceLineItem = { label: string; price: number }
+
+export async function updateInvoiceDetails(data: {
+  invoiceId: string
+  title: string
+  dueDate: string
+  lineItems: InvoiceLineItem[]
+}) {
+  const supabase = await createClient()
+
+  if (!data.title?.trim() || data.lineItems.length === 0) {
+    return { error: 'Title and at least one line item are required' }
+  }
+
+  const total = data.lineItems.reduce((sum, item) => sum + item.price, 0)
+
+  const { error } = await supabase
+    .from('invoices')
+    .update({
+      title: data.title.trim(),
+      due_date: data.dueDate || null,
+      line_items: data.lineItems,
+      total,
+    })
+    .eq('id', data.invoiceId)
+
+  if (error) return { error: error.message }
+
+  revalidatePath(`/admin/invoices/${data.invoiceId}`)
+  return { success: true }
+}

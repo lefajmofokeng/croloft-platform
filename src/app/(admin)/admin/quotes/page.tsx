@@ -10,7 +10,12 @@ export default async function AdminQuotesPage() {
 
   return (
     <div className="p-8">
-      <h1 className="mb-6 text-2xl font-bold">Quotes</h1>
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Quotes</h1>
+        <a href="/admin/quotes/new" className="rounded bg-blue-600 px-4 py-2 text-white">
+          + Create Quote
+        </a>
+      </div>
 
       <div className="overflow-x-auto rounded border">
         <table className="w-full text-sm">
@@ -22,6 +27,7 @@ export default async function AdminQuotesPage() {
               <th className="p-3">Once-off</th>
               <th className="p-3">Monthly</th>
               <th className="p-3">Date</th>
+              <th className="p-3">Status</th>
             </tr>
           </thead>
           <tbody>
@@ -41,6 +47,13 @@ export default async function AdminQuotesPage() {
                 <td className="p-3">{quote.monthly_total > 0 ? `R${quote.monthly_total}/mo` : '—'}</td>
                 <td className="p-3 text-gray-500">
                   {new Date(quote.created_at).toLocaleDateString('en-ZA')}
+                </td>
+                <td className="p-3">
+                  {quote.accepted_at ? (
+                    <span className="rounded bg-green-100 px-2 py-1 text-xs text-green-700">Accepted</span>
+                  ) : (
+                    <span className="rounded bg-gray-100 px-2 py-1 text-xs text-gray-500">Pending</span>
+                  )}
                 </td>
               </tr>
             ))}

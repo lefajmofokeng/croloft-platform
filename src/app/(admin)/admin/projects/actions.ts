@@ -58,16 +58,37 @@ export async function createProject(formData: FormData): Promise<void> {
 
   if (!client_id || !name?.trim()) return
 
-  await supabase.from('projects').insert({
+  const project_number = `PRJ-${Date.now().toString().slice(-8)}`
+
+  const { data: project, error } = await supabase
+    .from('projects')
+    .insert({
+      client_id,
+      project_number,
+      name: name.trim(),
+      description: description?.trim() || null,
+      status,
+      start_date: start_date || null,
+      target_completion_date: target_completion_date || null,
+    })
+    .select()
+    .single()
+
+  if (error || !project) return
+
+  // Auto-generate a placeholder invoice for the new project — admin fleshes it out
+  const invoice_number = `INV-${Date.now().toString().slice(-8)}`
+  await supabase.from('invoices').insert({
     client_id,
-    name: name.trim(),
-    description: description?.trim() || null,
-    status,
-    start_date: start_date || null,
-    target_completion_date: target_completion_date || null,
+    project_id: project.id,
+    invoice_number,
+    title: `Invoice for ${name.trim()}`,
+    line_items: [{ label: name.trim(), price: 0 }],
+    total: 0,
   })
 
   revalidatePath('/admin/projects')
+  revalidatePath('/admin/invoices')
   redirect('/admin/projects')
 }
 
@@ -78,8 +99,12 @@ export async function updateProject(formData: FormData): Promise<void> {
   const name = formData.get('name') as string
   const description = formData.get('description') as string
   const status = formData.get('status') as string
+  const progress_percent = formData.get('progress_percent') as string
   const start_date = formData.get('start_date') as string
   const target_completion_date = formData.get('target_completion_date') as string
+  const team_contact_name = formData.get('team_contact_name') as string
+  const team_contact_email = formData.get('team_contact_email') as string
+  const team_contact_phone = formData.get('team_contact_phone') as string
 
   if (!id || !name?.trim()) return
 
@@ -89,8 +114,12 @@ export async function updateProject(formData: FormData): Promise<void> {
       name: name.trim(),
       description: description?.trim() || null,
       status,
+      progress_percent: Math.min(100, Math.max(0, parseInt(progress_percent) || 0)),
       start_date: start_date || null,
       target_completion_date: target_completion_date || null,
+      team_contact_name: team_contact_name?.trim() || null,
+      team_contact_email: team_contact_email?.trim() || null,
+      team_contact_phone: team_contact_phone?.trim() || null,
     })
     .eq('id', id)
 
@@ -190,6 +219,19 @@ export async function deleteProjectDocument(formData: FormData): Promise<void> {
   const admin = createAdminClient()
   await admin.storage.from('project-documents').remove([storage_path])
   await admin.from('project_documents').delete().eq('id', id)
+
+  revalidatePath(`/admin/projects/${project_id}`)
+}
+
+export async function addChangelogEntry(formData: FormData): Promise<void> {
+  const supabase = await createClient()
+
+  const project_id = formData.get('project_id') as string
+  const note = formData.get('note') as string
+
+  if (!project_id || !note?.trim()) return
+
+  await supabase.from('project_changelog').insert({ project_id, note: note.trim() })
 
   revalidatePath(`/admin/projects/${project_id}`)
 }

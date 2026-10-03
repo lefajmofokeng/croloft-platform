@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
-import { updateProject, deleteProject, addProjectUpdate, uploadProjectDocument } from '../actions'
+import { updateProject, deleteProject, addProjectUpdate, uploadProjectDocument, addChangelogEntry } from '../actions'
 import DocumentRow from '../document-row'
 import ConfirmSubmitButton from '@/components/confirm-submit-button'
 
@@ -41,13 +41,28 @@ export default async function ProjectDetailPage({
     .select('*')
     .eq('project_id', projectId)
     .order('created_at', { ascending: false })  
+
+  const { data: changelog } = await supabase
+    .from('project_changelog')
+    .select('*')
+    .eq('project_id', projectId)
+    .order('created_at', { ascending: false })  
   
     return (
     <div className="p-8 max-w-2xl">
       <h1 className="mb-1 text-2xl font-bold">{project.name}</h1>
-      <p className="mb-6 text-sm text-gray-500">
-        {project.profiles?.full_name || project.profiles?.email}
+      <p className="mb-2 text-sm text-gray-500">
+        {project.project_number} • {project.profiles?.full_name || project.profiles?.email}
       </p>
+      <div className="mb-6">
+        <div className="mb-1 flex justify-between text-xs text-gray-500">
+          <span>Progress</span>
+          <span>{project.progress_percent}%</span>
+        </div>
+        <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+          <div className="h-full bg-blue-600" style={{ width: `${project.progress_percent}%` }} />
+        </div>
+      </div>
 
       <form action={updateProject} className="mb-6 space-y-3 rounded border p-4">
         <input type="hidden" name="id" value={project.id} />
@@ -67,6 +82,33 @@ export default async function ProjectDetailPage({
             ))}
           </select>
         </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Progress (%)</label>
+          <input
+            type="number"
+            name="progress_percent"
+            min={0}
+            max={100}
+            defaultValue={project.progress_percent}
+            className="mt-1 w-full rounded border border-gray-300 p-2"
+          />
+        </div>
+
+        <div className="grid grid-cols-3 gap-3">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Team Contact Name</label>
+            <input type="text" name="team_contact_name" defaultValue={project.team_contact_name || ''} className="mt-1 w-full rounded border border-gray-300 p-2" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Contact Email</label>
+            <input type="email" name="team_contact_email" defaultValue={project.team_contact_email || ''} className="mt-1 w-full rounded border border-gray-300 p-2" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Contact Phone</label>
+            <input type="tel" name="team_contact_phone" defaultValue={project.team_contact_phone || ''} className="mt-1 w-full rounded border border-gray-300 p-2" />
+          </div>
+        </div>
+
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="block text-sm font-medium text-gray-700">Start Date</label>
@@ -90,6 +132,33 @@ export default async function ProjectDetailPage({
         confirmTitle="Delete this project?"
         confirmMessage="This will also delete its timeline updates and documents. This cannot be undone."
       />
+
+      <h2 className="mb-3 mt-8 font-semibold">Changelog</h2>
+      <form action={addChangelogEntry} className="mb-4 flex gap-2 rounded border p-4">
+        <input type="hidden" name="project_id" value={project.id} />
+        <input
+          type="text"
+          name="note"
+          required
+          placeholder="e.g. Fixed login bug, deployed to staging"
+          className="flex-1 rounded border border-gray-300 p-2 text-sm"
+        />
+        <button type="submit" className="rounded bg-blue-600 px-4 py-2 text-sm text-white">
+          Add Entry
+        </button>
+      </form>
+
+      <div className="mb-8 space-y-2">
+        {changelog?.map((entry) => (
+          <div key={entry.id} className="flex items-center justify-between rounded border px-3 py-2 text-sm">
+            <span>{entry.note}</span>
+            <span className="text-xs text-gray-400">
+              {new Date(entry.created_at).toLocaleString('en-ZA')}
+            </span>
+          </div>
+        ))}
+        {changelog?.length === 0 && <p className="text-sm text-gray-500">No changelog entries yet.</p>}
+      </div>
 
       <h2 className="mb-3 mt-8 font-semibold">Post an Update</h2>
       <form action={addProjectUpdate} className="mb-6 space-y-3 rounded border p-4">

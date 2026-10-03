@@ -28,7 +28,19 @@ export default async function QuoteDetailPage({
       <h1 className="mb-1 text-2xl font-bold">Quote {quote.quote_ref}</h1>
       <p className="mb-6 text-sm text-gray-500">
         {new Date(quote.created_at).toLocaleString('en-ZA')}
+        {quote.accepted_at && (
+          <span className="ml-2 rounded bg-green-100 px-2 py-1 text-xs text-green-700">
+            Accepted {new Date(quote.accepted_at).toLocaleDateString('en-ZA')}
+          </span>
+        )}
       </p>
+
+      <a
+        href={`/admin/quotes/${quote.id}/convert`}
+        className="mb-6 inline-block rounded bg-blue-600 px-4 py-2 text-sm text-white"
+      >
+        Convert to Project
+      </a>
 
       <div className="mb-6 rounded border p-4">
         <h2 className="mb-2 font-semibold">Client</h2>

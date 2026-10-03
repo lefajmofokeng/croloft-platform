@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
+import PrintInvoiceButton from './print-invoice-button'
 
 type LineItem = { label: string; price: number }
 
@@ -63,6 +64,16 @@ export default async function PortalInvoiceDetailPage({
         <span>Issued: {invoice.issue_date}</span>
         {invoice.due_date && <span>Due: {invoice.due_date}</span>}
       </div>
+
+      <PrintInvoiceButton
+        invoiceNumber={invoice.invoice_number}
+        title={invoice.title}
+        lineItems={lineItems}
+        total={invoice.total}
+        issueDate={invoice.issue_date}
+        dueDate={invoice.due_date}
+        status={invoice.status}
+      />
     </div>
   )
 }

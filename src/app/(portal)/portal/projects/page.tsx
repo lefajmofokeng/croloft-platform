@@ -1,5 +1,4 @@
 import { createClient } from '@/lib/supabase/server'
-import Link from 'next/link'
 
 const statusLabels: Record<string, string> = {
   planning: 'Planning',
@@ -9,36 +8,32 @@ const statusLabels: Record<string, string> = {
   on_hold: 'On Hold',
 }
 
-export default async function AdminProjectsPage() {
+export default async function PortalProjectsPage() {
   const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
 
   const { data: projects } = await supabase
     .from('projects')
-    .select('*, profiles(full_name, email)')
+    .select('*')
+    .eq('client_id', user!.id)
     .order('created_at', { ascending: false })
 
   return (
     <div className="p-8">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Projects</h1>
-        <Link href="/admin/projects/new" className="rounded bg-blue-600 px-4 py-2 text-white">
-          + Assign Project
-        </Link>
-      </div>
+      <h1 className="mb-6 text-2xl font-bold">Your Projects</h1>
 
-      <div className="space-y-2">
+      <div className="space-y-3">
         {projects?.map((project) => (
-          <Link
+          <a
             key={project.id}
-            href={`/admin/projects/${project.id}`}
-            className="block rounded border p-4 hover:border-blue-400"
+            href={`/portal/projects/${project.id}`}
+            className="block rounded border p-4 hover:border-blue-400 hover:shadow-sm"
           >
             <div className="flex items-center justify-between">
-               <div>
+              <div>
                 <p className="font-medium">{project.name}</p>
-                <p className="text-sm text-gray-500">
-                  {project.project_number} • {project.profiles?.full_name || project.profiles?.email}
-                </p>
+                <p className="text-xs text-gray-400">{project.project_number}</p>
               </div>
               <span className="rounded bg-gray-100 px-2 py-1 text-xs">
                 {statusLabels[project.status]}
@@ -47,11 +42,10 @@ export default async function AdminProjectsPage() {
             <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
               <div className="h-full bg-blue-600" style={{ width: `${project.progress_percent}%` }} />
             </div>
-          </Link>
+          </a>
         ))}
+        {projects?.length === 0 && <p className="text-gray-500">No projects yet.</p>}
       </div>
-
-      {projects?.length === 0 && <p className="text-gray-500">No projects yet.</p>}
     </div>
   )
 }

@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import { updateInvoiceStatus, deleteInvoice } from '../actions'
 import ConfirmSubmitButton from '@/components/confirm-submit-button';
+import InvoiceLineItemsEditor from '../invoice-line-items-editor';
 
 type LineItem = { label: string; price: number }
 
@@ -44,20 +45,12 @@ export default async function InvoiceDetailPage({
         {invoice.invoice_number} • {invoice.profiles?.full_name || invoice.profiles?.email}
       </p>
 
-      <div className="mb-6 rounded border p-4">
-        <div className="space-y-1">
-          {lineItems.map((item, i) => (
-            <div key={i} className="flex justify-between text-sm text-gray-600">
-              <span>{item.label}</span>
-              <span>R{item.price.toFixed(2)}</span>
-            </div>
-          ))}
-        </div>
-        <div className="mt-3 flex justify-between border-t pt-3 font-semibold">
-          <span>Total</span>
-          <span>R{invoice.total}</span>
-        </div>
-      </div>
+      <InvoiceLineItemsEditor
+        invoiceId={invoice.id}
+        initialTitle={invoice.title}
+        initialDueDate={invoice.due_date}
+        initialLineItems={lineItems}
+      />
 
       <div className="mb-6 flex gap-6 text-sm text-gray-500">
         <span>Issued: {invoice.issue_date}</span>

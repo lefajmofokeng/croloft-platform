@@ -94,7 +94,9 @@ export default async function PortalProjectDetailPage({
         {project.target_completion_date && <span>Target: {project.target_completion_date}</span>}
       </div>
 
-      <h2 className="mb-3 font-semibold">Timeline</h2>
+      {project.show_timeline && (
+        <>
+      <h2 className="mb-3 mt-8 font-semibold">Timeline</h2>
       <div className="space-y-3">
         {updates?.map((update) => (
           <div key={update.id} className="rounded border p-3">
@@ -107,7 +109,11 @@ export default async function PortalProjectDetailPage({
       </div>
 
       {updates?.length === 0 && <p className="text-gray-500">No updates yet.</p>}
+        </>
+      )}
 
+      {project.show_changelog && (
+        <>
       <h2 className="mb-3 mt-8 font-semibold">Changelog</h2>
       <div className="space-y-2">
         {changelog?.map((entry) => (
@@ -120,6 +126,8 @@ export default async function PortalProjectDetailPage({
         ))}
         {changelog?.length === 0 && <p className="text-sm text-gray-500">No changelog entries yet.</p>}
       </div>
+        </>
+      )}
 
       <PrintSummaryButton
         projectName={project.name}
@@ -134,6 +142,8 @@ export default async function PortalProjectDetailPage({
         teamContactPhone={project.team_contact_phone}
         updates={updates || []}
         changelog={changelog || []}
+        showTimeline={project.show_timeline}
+        showChangelog={project.show_changelog}
         documents={(documents || []).map((d) => ({ name: d.name, description: d.description }))}
       />
     

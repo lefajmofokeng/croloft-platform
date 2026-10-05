@@ -105,6 +105,8 @@ export async function updateProject(formData: FormData): Promise<void> {
   const team_contact_name = formData.get('team_contact_name') as string
   const team_contact_email = formData.get('team_contact_email') as string
   const team_contact_phone = formData.get('team_contact_phone') as string
+  const show_timeline = formData.get('show_timeline') === 'on'
+  const show_changelog = formData.get('show_changelog') === 'on'
 
   if (!id || !name?.trim()) return
 
@@ -120,6 +122,8 @@ export async function updateProject(formData: FormData): Promise<void> {
       team_contact_name: team_contact_name?.trim() || null,
       team_contact_email: team_contact_email?.trim() || null,
       team_contact_phone: team_contact_phone?.trim() || null,
+      show_timeline,
+      show_changelog,
     })
     .eq('id', id)
 

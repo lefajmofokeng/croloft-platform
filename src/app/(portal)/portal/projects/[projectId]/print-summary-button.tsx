@@ -15,6 +15,8 @@ export default function PrintSummaryButton({
   teamContactName,
   teamContactEmail,
   teamContactPhone,
+  showTimeline,
+  showChangelog,
   updates,
   changelog,
   documents,
@@ -29,6 +31,8 @@ export default function PrintSummaryButton({
   teamContactName: string | null
   teamContactEmail: string | null
   teamContactPhone: string | null
+  showTimeline: boolean
+  showChangelog: boolean
   updates: Update[]
   changelog: ChangelogEntry[]
   documents: DocumentInfo[]
@@ -103,11 +107,15 @@ export default function PrintSummaryButton({
               ${teamContactPhone ? `<br/>${teamContactPhone}` : ''}
             </div>` : ''}
 
-          <h2>Timeline</h2>
-          ${updatesHtml}
+          ${showTimeline ? `
+            <h2>Timeline</h2>
+            ${updatesHtml}
+          ` : ''}
 
-          <h2>Changelog</h2>
-          ${changelogHtml}
+          ${showChangelog ? `
+            <h2>Changelog</h2>
+            ${changelogHtml}
+          ` : ''}
 
           <h2>Documents</h2>
           <p style="font-size:13px;color:#555;margin-bottom:10px;">${documents.length} document(s) on file</p>

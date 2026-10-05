@@ -149,6 +149,23 @@ export default async function ProjectDetailPage({
           </div>
         </div>
 
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Features for this project</label>
+          <div className="flex gap-4 text-sm">
+            <label className="flex items-center gap-2">
+              <input type="checkbox" name="show_timeline" defaultChecked={project.show_timeline} />
+              Show Timeline
+            </label>
+            <label className="flex items-center gap-2">
+              <input type="checkbox" name="show_changelog" defaultChecked={project.show_changelog} />
+              Show Changelog
+            </label>
+          </div>
+          <p className="mt-1 text-xs text-gray-400">
+            Turn off for simpler engagements (support, networking, ad campaigns) that don&apos;t need milestone tracking.
+          </p>
+        </div>
+
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="block text-sm font-medium text-gray-700">Start Date</label>
@@ -173,7 +190,9 @@ export default async function ProjectDetailPage({
         confirmMessage="This will also delete its timeline updates and documents. This cannot be undone."
       />
 
-      <h2 className="mb-3 mt-8 font-semibold">Changelog</h2>
+            {project.show_changelog && (
+        <>
+          <h2 className="mb-3 mt-8 font-semibold">Changelog</h2>
       <form action={addChangelogEntry} className="mb-4 flex gap-2 rounded border p-4">
         <input type="hidden" name="project_id" value={project.id} />
         <input
@@ -199,6 +218,8 @@ export default async function ProjectDetailPage({
         ))}
         {changelog?.length === 0 && <p className="text-sm text-gray-500">No changelog entries yet.</p>}
       </div>
+      </>
+      )}
 
       <h2 className="mb-3 mt-8 font-semibold">Post an Update</h2>
       <form action={addProjectUpdate} className="mb-6 space-y-3 rounded border p-4">
@@ -215,7 +236,9 @@ export default async function ProjectDetailPage({
         </button>
       </form>
 
-      <h2 className="mb-3 font-semibold">Timeline</h2>
+      {project.show_timeline && (
+        <>
+      <h2 className="mb-3 mt-8 font-semibold">Timeline</h2>
       <div className="space-y-3">
         {updates?.map((update) => (
           <div key={update.id} className="rounded border p-3">
@@ -228,6 +251,8 @@ export default async function ProjectDetailPage({
       </div>
 
       {updates?.length === 0 && <p className="text-gray-500">No updates yet.</p>}
+      </>
+      )}
 
     <h2 className="mb-3 mt-8 font-semibold">Documents</h2>
       <form

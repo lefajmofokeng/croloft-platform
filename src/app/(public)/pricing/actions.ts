@@ -4,6 +4,8 @@ import { createClient } from '@/lib/supabase/server'
 
 type LineItem = { label: string; price: number; recurring?: boolean }
 
+type HourlyItem = { label: string; rate: number; unit: string }
+
 export async function saveQuote(data: {
   productId: string
   productName: string
@@ -11,9 +13,9 @@ export async function saveQuote(data: {
   clientEmail: string
   clientPhone: string
   lineItems: LineItem[]
+  hourlyItems: HourlyItem[]
   onceOffTotal: number
   monthlyTotal: number
-  userId?: string | null
 }) {
   const supabase = await createClient()
 
@@ -27,9 +29,9 @@ export async function saveQuote(data: {
     client_email: data.clientEmail.trim(),
     client_phone: data.clientPhone?.trim() || null,
     line_items: data.lineItems,
+    hourly_items: data.hourlyItems,
     once_off_total: data.onceOffTotal,
     monthly_total: data.monthlyTotal,
-    user_id: data.userId || null,
   })
 
   if (error) {

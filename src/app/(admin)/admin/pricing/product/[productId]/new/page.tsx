@@ -25,14 +25,28 @@ export default async function NewAddonPage({
             <option value="numeric">Numeric (price per unit)</option>
           </select>
         </div>
-        <div>
+                <div>
           <label className="block text-sm font-medium text-gray-700">Billing Cycle</label>
           <select name="billing_cycle" defaultValue="once_off" required className="mt-1 w-full rounded border border-gray-300 p-2">
             <option value="once_off">Once-off</option>
             <option value="monthly">Monthly</option>
+            <option value="hourly">Hourly</option>
           </select>
           <p className="mt-1 text-xs text-gray-400">
-            For &quot;Included&quot;: once-off builds the base price, monthly builds the maintenance price.
+            For &quot;Included&quot;: once-off builds the base price, monthly builds the maintenance price. Hourly items show separately and aren&apos;t included in the Year 1 total (hours are variable).
+          </p>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Group Name (optional)</label>
+          <input
+            type="text"
+            name="group_name"
+            placeholder="e.g. Structure & Scope, Maintenance & Support Retainers"
+            className="mt-1 w-full rounded border border-gray-300 p-2"
+          />
+          <p className="mt-1 text-xs text-gray-400">
+            Add-ons sharing the same group name are shown together under that heading.
           </p>
         </div>
         <div>

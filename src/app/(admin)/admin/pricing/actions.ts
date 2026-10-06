@@ -77,6 +77,7 @@ export async function createAddon(formData: FormData): Promise<void> {
   const unit_price = formData.get('unit_price') as string
   const unit_label = formData.get('unit_label') as string
   const included_quantity = formData.get('included_quantity') as string
+  const group_name = formData.get('group_name') as string
 
   if (!name?.trim() || !product_id || !type) {
     return
@@ -90,6 +91,7 @@ export async function createAddon(formData: FormData): Promise<void> {
     unit_price: type === 'numeric' || type === 'included' ? parseFloat(unit_price) || 0 : null,
     unit_label: type === 'numeric' ? unit_label?.trim() || null : null,
     included_quantity: type === 'numeric' ? parseInt(included_quantity) || 0 : 0,
+    group_name: group_name?.trim() || null,
   })
 
   if (type === 'included') {
@@ -207,6 +209,7 @@ export async function updateAddon(formData: FormData): Promise<void> {
   const unit_price = formData.get('unit_price') as string
   const unit_label = formData.get('unit_label') as string
   const included_quantity = formData.get('included_quantity') as string
+  const group_name = formData.get('group_name') as string 
 
   if (!id || !name?.trim() || !type) {
     return
@@ -221,6 +224,7 @@ export async function updateAddon(formData: FormData): Promise<void> {
       unit_price: type === 'numeric' || type === 'included' ? parseFloat(unit_price) || 0 : null,
       unit_label: type === 'numeric' ? unit_label?.trim() || null : null,
       included_quantity: type === 'numeric' ? parseInt(included_quantity) || 0 : 0,
+      group_name: group_name?.trim() || null,
     })
     .eq('id', id)
 

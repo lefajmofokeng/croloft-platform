@@ -61,6 +61,8 @@ export async function convertQuoteToProject(formData: FormData): Promise<void> {
 
 type LineItem = { label: string; price: number; recurring?: boolean }
 
+type HourlyItem = { label: string; rate: number; unit: string }
+
 export async function adminCreateQuote(data: {
   clientId?: string
   guestName?: string
@@ -69,6 +71,7 @@ export async function adminCreateQuote(data: {
   productId: string
   productName: string
   lineItems: LineItem[]
+  hourlyItems: HourlyItem[]
   onceOffTotal: number
   monthlyTotal: number
 }) {
@@ -106,6 +109,7 @@ export async function adminCreateQuote(data: {
     client_phone: data.guestPhone || null,
     user_id: data.clientId || null,
     line_items: data.lineItems,
+    hourly_items: data.hourlyItems,
     once_off_total: data.onceOffTotal,
     monthly_total: data.monthlyTotal,
   })

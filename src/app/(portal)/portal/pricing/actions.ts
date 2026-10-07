@@ -4,10 +4,13 @@ import { createClient } from '@/lib/supabase/server'
 
 type LineItem = { label: string; price: number; recurring?: boolean }
 
+type HourlyItem = { label: string; rate: number; unit: string }
+
 export async function generatePortalQuote(data: {
   productId: string
   productName: string
   lineItems: LineItem[]
+  hourlyItems: HourlyItem[]
   onceOffTotal: number
   monthlyTotal: number
 }) {
@@ -33,6 +36,7 @@ export async function generatePortalQuote(data: {
     client_name: profile.full_name || profile.email,
     client_email: profile.email,
     line_items: data.lineItems,
+    hourly_items: data.hourlyItems,
     once_off_total: data.onceOffTotal,
     monthly_total: data.monthlyTotal,
     user_id: user.id,

@@ -16,6 +16,7 @@ export async function saveQuote(data: {
   hourlyItems: HourlyItem[]
   onceOffTotal: number
   monthlyTotal: number
+  userId?: string | null
 }) {
   const supabase = await createClient()
 
@@ -32,6 +33,7 @@ export async function saveQuote(data: {
     hourly_items: data.hourlyItems,
     once_off_total: data.onceOffTotal,
     monthly_total: data.monthlyTotal,
+    user_id: data.userId || null,
   })
 
   if (error) {

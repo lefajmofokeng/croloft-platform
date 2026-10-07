@@ -109,6 +109,7 @@ export default function PortalPricingCalculator({ product }: { product: Product 
       productId: product.id,
       productName: product.name,
       lineItems,
+      hourlyItems,
       onceOffTotal,
       monthlyTotal,
     })

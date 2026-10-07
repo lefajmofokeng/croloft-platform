@@ -119,7 +119,7 @@ export default function AdminQuoteCalculator({
     setGenerating(true)
     setError(null)
 
-    const result = await adminCreateQuote({
+        const result = await adminCreateQuote({
       clientId,
       guestName,
       guestEmail,
@@ -127,6 +127,7 @@ export default function AdminQuoteCalculator({
       productId: product.id,
       productName: product.name,
       lineItems,
+      hourlyItems,
       onceOffTotal,
       monthlyTotal,
     })

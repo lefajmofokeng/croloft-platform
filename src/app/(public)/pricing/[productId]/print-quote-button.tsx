@@ -140,7 +140,7 @@ export default function PrintQuoteButton({
 
     const result = await saveQuote({
       productId, productName, clientName: name, clientEmail: email, clientPhone: phone,
-      lineItems, onceOffTotal, monthlyTotal,
+      lineItems, hourlyItems, onceOffTotal, monthlyTotal,
     })
 
     setLoading(false)
@@ -172,7 +172,7 @@ export default function PrintQuoteButton({
 
     const quoteResult = await saveQuote({
       productId, productName, clientName, clientEmail, clientPhone: '',
-      lineItems, onceOffTotal, monthlyTotal, userId: result.userId,
+      lineItems, onceOffTotal, hourlyItems, monthlyTotal, userId: result.userId,
     })
 
     setLoading(false)
@@ -196,7 +196,7 @@ export default function PrintQuoteButton({
 
     const result = await saveQuote({
       productId, productName, clientName, clientEmail, clientPhone: '',
-      lineItems, onceOffTotal, monthlyTotal, userId: loggedInProfile.userId,
+      lineItems, onceOffTotal, hourlyItems, monthlyTotal, userId: loggedInProfile.userId,
     })
 
     setLoading(false)

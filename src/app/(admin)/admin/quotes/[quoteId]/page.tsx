@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
+import QuotePricingTable from '@/components/quote-pricing-table'
 
 type LineItem = { label: string; price: number; recurring?: boolean }
 
@@ -50,27 +51,13 @@ export default async function QuoteDetailPage({
       </div>
 
       <div className="mb-6 rounded border p-4">
-        <h2 className="mb-2 font-semibold">{quote.product_name}</h2>
-        <div className="space-y-1">
-          {lineItems.map((item, i) => (
-            <div key={i} className="flex justify-between text-sm text-gray-600">
-              <span>{item.label}</span>
-              <span>R{item.price.toFixed(2)}{item.recurring ? '/mo' : ''}</span>
-            </div>
-          ))}
-        </div>
-        <div className="mt-3 space-y-1 border-t pt-3">
-          <div className="flex justify-between font-medium">
-            <span>Once-off total</span>
-            <span>R{quote.once_off_total}</span>
-          </div>
-          {quote.monthly_total > 0 && (
-            <div className="flex justify-between font-medium">
-              <span>Monthly total</span>
-              <span>R{quote.monthly_total}/mo</span>
-            </div>
-          )}
-        </div>
+        <h2 className="mb-3 font-semibold">{quote.product_name}</h2>
+        <QuotePricingTable
+          lineItems={lineItems}
+          hourlyItems={(quote.hourly_items || []) as { label: string; rate: number; unit: string }[]}
+          onceOffTotal={quote.once_off_total}
+          monthlyTotal={quote.monthly_total}
+        />
       </div>
     </div>
   )

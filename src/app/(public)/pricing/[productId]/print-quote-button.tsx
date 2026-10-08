@@ -51,23 +51,42 @@ export default function PrintQuoteButton({
   function generatePdf(quoteRef: string, clientName: string, clientEmail: string) {
     const dateStr = new Date().toLocaleDateString('en-ZA', { year: 'numeric', month: 'long', day: 'numeric' })
 
-    const onceOffHtml = lineItems.filter((i) => !i.recurring).map((item) => `
-        <tr>
-          <td style="padding:8px 0;border-bottom:1px solid #eee;">${item.label}</td>
-          <td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right;">R${item.price.toFixed(2)}</td>
-        </tr>`).join('')
+    const money = (n: number) => `R${n.toFixed(2)}`
+    const cell = 'padding:8px 6px;border-bottom:1px solid #eee;text-align:right;'
+    const th = 'padding:6px;border-bottom:2px solid #333;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:#888;text-align:right;'
+    const labelCell = 'padding:8px 6px 8px 0;border-bottom:1px solid #eee;'
 
-    const monthlyHtml = lineItems.filter((i) => i.recurring).map((item) => `
+    const onceOffRows = lineItems
+      .filter((i) => !i.recurring)
+      .map((item) => `
         <tr>
-          <td style="padding:8px 0;border-bottom:1px solid #eee;">${item.label}</td>
-          <td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right;">R${item.price.toFixed(2)}/mo</td>
-        </tr>`).join('')
+          <td style="${labelCell}">${item.label}</td>
+          <td style="${cell}">${money(item.price)}</td>
+          <td style="${cell}">—</td>
+          <td style="${cell}">—</td>
+        </tr>`)
 
-    const hourlyHtml = hourlyItems.map((item) => `
+    const monthlyRows = lineItems
+      .filter((i) => i.recurring)
+      .map((item) => `
         <tr>
-          <td style="padding:8px 0;border-bottom:1px solid #eee;">${item.label} (${item.unit})</td>
-          <td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right;">R${item.rate.toFixed(2)}/hr</td>
-        </tr>`).join('')
+          <td style="${labelCell}">${item.label}</td>
+          <td style="${cell}">—</td>
+          <td style="${cell}">${money(item.price)}</td>
+          <td style="${cell}">—</td>
+        </tr>`)
+
+    const hourlyRows = hourlyItems.map((item) => `
+        <tr>
+          <td style="${labelCell}">${item.label} (${item.unit})</td>
+          <td style="${cell}">—</td>
+          <td style="${cell}">—</td>
+          <td style="${cell}">${money(item.rate)}/hr</td>
+        </tr>`)
+
+    const rowsHtml = [...onceOffRows, ...monthlyRows, ...hourlyRows].join('')
+    const hasMonthly = lineItems.some((i) => i.recurring)
+    const hasHourly = hourlyItems.length > 0
 
         const html = `
       <!DOCTYPE html>
@@ -131,15 +150,30 @@ export default function PrintQuoteButton({
             </div>
           </div>
 
-          ${onceOffHtml ? `<h3>Once-off</h3><table>${onceOffHtml}</table>` : ''}
-          ${monthlyHtml ? `<h3>Monthly</h3><table>${monthlyHtml}</table>` : ''}
-          ${hourlyHtml ? `<h3>Hourly</h3><table>${hourlyHtml}</table><p class="hourly-note">Hourly items are billed as worked and are not included in the totals below.</p>` : ''}
+          <table>
+            <thead>
+              <tr>
+                <th style="${th}text-align:left;padding-left:0;">Description</th>
+                <th style="${th}">Once-off</th>
+                <th style="${th}">Monthly</th>
+                <th style="${th}">Hourly</th>
+              </tr>
+            </thead>
+            <tbody>${rowsHtml}</tbody>
+            <tfoot>
+              <tr>
+                <td style="padding:10px 6px 4px 0;font-weight:bold;">Totals</td>
+                <td style="padding:10px 6px 4px;text-align:right;font-weight:bold;">${money(onceOffTotal)}</td>
+                <td style="padding:10px 6px 4px;text-align:right;font-weight:bold;">${money(monthlyTotal)}</td>
+                <td style="padding:10px 6px 4px;text-align:right;font-weight:bold;">${hasHourly ? 'as worked' : '—'}</td>
+              </tr>
+            </tfoot>
+          </table>
 
           <div class="totals">
-            <div><span>Once-off total</span><span>R${onceOffTotal.toFixed(2)}</span></div>
-            ${monthlyTotal > 0 ? `<div><span>Monthly total</span><span>R${monthlyTotal.toFixed(2)}/mo</span></div>` : ''}
-            <div class="grand"><span>Combined (Year 1)</span><span>R${(onceOffTotal + monthlyTotal * 12).toFixed(2)}</span></div>
+            <div class="grand"><span>Combined (Year 1)</span><span>${money(onceOffTotal + monthlyTotal * 12)}</span></div>
           </div>
+          ${hasMonthly || hasHourly ? `<p class="hourly-note">Combined (Year 1) is the once-off total plus 12 months of monthly charges. Hourly items are billed as worked and are not included.</p>` : ''}
 
           <div class="notices">
             <h4>Validity</h4>

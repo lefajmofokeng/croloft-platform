@@ -4,6 +4,10 @@ import DocumentDownloadButton from '../document-download-button'
 import PrintSummaryButton from './print-summary-button'
 import DocumentVersionHistory from '@/components/document-version-history'
 import { getClientDocumentVersionUrl } from '../actions'
+import ExpiryBadge from '@/components/expiry-badge'
+
+type LineItem = { label: string; price: number; recurring?: boolean }
+type HourlyItem = { label: string; rate: number; unit: string }
 
 const statusLabels: Record<string, string> = {
   planning: 'Planning',
@@ -30,6 +34,10 @@ export default async function PortalProjectDetailPage({
   if (!project) {
     notFound()
   }
+
+  const { data: linkedQuote } = project.quote_id
+    ? await supabase.from('quotes').select('*').eq('id', project.quote_id).single()
+    : { data: null }
 
   const { data: updates } = await supabase
     .from('project_updates')
@@ -77,6 +85,97 @@ export default async function PortalProjectDetailPage({
           <div className="h-full bg-blue-600" style={{ width: `${project.progress_percent}%` }} />
         </div>
       </div>
+
+            {project.show_domain_ssl && (
+        <div className="mb-6 rounded border p-4">
+          <h2 className="mb-3 font-semibold">Domain &amp; SSL</h2>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+            {project.domain_name && (
+              <div><span className="text-gray-500">Domain:</span> {project.domain_name}</div>
+            )}
+            {project.registrar && (
+              <div><span className="text-gray-500">Registrar:</span> {project.registrar}</div>
+            )}
+            {project.domain_expiry && (
+              <div className="flex items-center gap-2">
+                <span className="text-gray-500">Domain Expiry:</span> {project.domain_expiry}
+                <ExpiryBadge date={project.domain_expiry} />
+              </div>
+            )}
+            {project.ssl_provider && (
+              <div><span className="text-gray-500">SSL Provider:</span> {project.ssl_provider}</div>
+            )}
+            {project.ssl_expiry && (
+              <div className="flex items-center gap-2">
+                <span className="text-gray-500">SSL Expiry:</span> {project.ssl_expiry}
+                <ExpiryBadge date={project.ssl_expiry} />
+              </div>
+            )}
+            {project.hosting_provider && (
+              <div><span className="text-gray-500">Hosting:</span> {project.hosting_provider}</div>
+            )}
+            {project.dns_provider && (
+              <div><span className="text-gray-500">DNS:</span> {project.dns_provider}</div>
+            )}
+            <div><span className="text-gray-500">Auto-renew:</span> {project.auto_renew ? 'Yes' : 'No'}</div>
+          </div>
+        </div>
+      )}
+
+      {linkedQuote && (
+        <div className="mb-6 rounded border p-4">
+          <h2 className="mb-3 font-semibold">Quote Pricing ({linkedQuote.quote_ref})</h2>
+          {(() => {
+            const lineItems = linkedQuote.line_items as LineItem[]
+            const hourlyItems = (linkedQuote.hourly_items || []) as HourlyItem[]
+            const onceOffItems = lineItems.filter((i) => !i.recurring)
+            const monthlyItems = lineItems.filter((i) => i.recurring)
+          
+            return (
+              <div className="space-y-3">
+                {onceOffItems.length > 0 && (
+                  <div>
+                    <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-400">Once-off</p>
+                    {onceOffItems.map((item, i) => (
+                      <div key={i} className="flex justify-between text-sm text-gray-600">
+                        <span>{item.label}</span><span>R{item.price.toFixed(2)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {monthlyItems.length > 0 && (
+                  <div>
+                    <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-400">Monthly</p>
+                    {monthlyItems.map((item, i) => (
+                      <div key={i} className="flex justify-between text-sm text-gray-600">
+                        <span>{item.label}</span><span>R{item.price.toFixed(2)}/mo</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {hourlyItems.length > 0 && (
+                  <div>
+                    <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-400">Hourly</p>
+                    {hourlyItems.map((item, i) => (
+                      <div key={i} className="flex justify-between text-sm text-gray-600">
+                        <span>{item.label} ({item.unit})</span><span>R{item.rate.toFixed(2)}/hr</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div className="flex justify-between border-t pt-2 font-semibold">
+                  <span>Once-off total</span><span>R{linkedQuote.once_off_total}</span>
+                </div>
+                {linkedQuote.monthly_total > 0 && (
+                  <div className="flex justify-between font-semibold">
+                    <span>Monthly total</span><span>R{linkedQuote.monthly_total}/mo</span>
+                  </div>
+                )}
+              </div>
+            )
+          })()}
+        </div>
+      )}
 
       {project.team_contact_name && (
         <div className="mb-6 rounded border bg-gray-50 p-4">

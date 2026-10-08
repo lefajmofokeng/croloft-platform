@@ -37,7 +37,7 @@ export default async function AdminProjectsPage() {
                <div>
                 <p className="font-medium">{project.name}</p>
                 <p className="text-sm text-gray-500">
-                  {project.project_number} • {project.profiles?.full_name || project.profiles?.email}
+                  {project.project_number} • {project.profiles?.full_name || project.profiles?.email || `${project.guest_name} (guest)`}
                 </p>
               </div>
               <span className="rounded bg-gray-100 px-2 py-1 text-xs">

@@ -4,7 +4,9 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { updateInvoiceDetails } from './actions'
 
-type LineItem = { label: string; price: number }
+type Cycle = 'once_off' | 'monthly' | 'hourly'
+type LineItem = { label: string; price: number; cycle?: Cycle; rate?: number }
+type Row = { label: string; price: number; cycle: Cycle; rate: number }
 
 export default function InvoiceLineItemsEditor({
   invoiceId,
@@ -20,22 +22,33 @@ export default function InvoiceLineItemsEditor({
   const router = useRouter()
   const [title, setTitle] = useState(initialTitle)
   const [dueDate, setDueDate] = useState(initialDueDate || '')
-  const [items, setItems] = useState<LineItem[]>(initialLineItems)
+  const [items, setItems] = useState<Row[]>(
+    initialLineItems.map((item) => ({
+      label: item.label,
+      price: item.price,
+      cycle: item.cycle || 'once_off',
+      rate: item.rate || 0,
+    }))
+  )
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const total = items.reduce((sum, item) => sum + (item.price || 0), 0)
 
-  function updateItem(index: number, field: 'label' | 'price', value: string) {
+  function updateItem(index: number, field: keyof Row, value: string) {
     setItems((prev) =>
-      prev.map((item, i) =>
-        i === index ? { ...item, [field]: field === 'price' ? parseFloat(value) || 0 : value } : item
-      )
+      prev.map((item, i) => {
+        if (i !== index) return item
+        if (field === 'price' || field === 'rate') {
+          return { ...item, [field]: parseFloat(value) || 0 }
+        }
+        return { ...item, [field]: value }
+      })
     )
   }
 
   function addRow() {
-    setItems((prev) => [...prev, { label: '', price: 0 }])
+    setItems((prev) => [...prev, { label: '', price: 0, cycle: 'once_off', rate: 0 }])
   }
 
   function removeRow(index: number) {
@@ -46,7 +59,14 @@ export default function InvoiceLineItemsEditor({
     setSaving(true)
     setError(null)
 
-    const cleanedItems = items.filter((item) => item.label.trim().length > 0)
+    const cleanedItems = items
+      .filter((item) => item.label.trim().length > 0)
+      .map((item) => ({
+        label: item.label.trim(),
+        price: item.price,
+        cycle: item.cycle,
+        ...(item.cycle === 'hourly' ? { rate: item.rate } : {}),
+      }))
 
     const result = await updateInvoiceDetails({
       invoiceId,
@@ -89,28 +109,54 @@ export default function InvoiceLineItemsEditor({
 
       <div>
         <label className="mb-2 block text-sm font-medium text-gray-700">Line Items</label>
+
+        <div className="mb-1 grid grid-cols-12 gap-2 text-xs text-gray-400">
+          <span className="col-span-4">Description</span>
+          <span className="col-span-2">Type</span>
+          <span className="col-span-2">Amount (R)</span>
+          <span className="col-span-2">Rate (R/hr)</span>
+          <span className="col-span-2"></span>
+        </div>
+
         <div className="space-y-2">
           {items.map((item, i) => (
-            <div key={i} className="flex gap-2">
+            <div key={i} className="grid grid-cols-12 gap-2">
               <input
                 type="text"
                 value={item.label}
                 onChange={(e) => updateItem(i, 'label', e.target.value)}
                 placeholder="Description"
-                className="flex-1 rounded border border-gray-300 p-2 text-sm"
+                className="col-span-4 rounded border border-gray-300 p-2 text-sm"
               />
+              <select
+                value={item.cycle}
+                onChange={(e) => updateItem(i, 'cycle', e.target.value)}
+                className="col-span-2 rounded border border-gray-300 p-2 text-sm"
+              >
+                <option value="once_off">Once-off</option>
+                <option value="monthly">Monthly</option>
+                <option value="hourly">Hourly</option>
+              </select>
               <input
                 type="number"
                 step="0.01"
                 value={item.price}
                 onChange={(e) => updateItem(i, 'price', e.target.value)}
-                placeholder="R Amount"
-                className="w-32 rounded border border-gray-300 p-2 text-sm"
+                className="col-span-2 rounded border border-gray-300 p-2 text-sm"
+              />
+              <input
+                type="number"
+                step="0.01"
+                value={item.cycle === 'hourly' ? item.rate : ''}
+                onChange={(e) => updateItem(i, 'rate', e.target.value)}
+                disabled={item.cycle !== 'hourly'}
+                placeholder={item.cycle === 'hourly' ? 'R/hr' : '—'}
+                className="col-span-2 rounded border border-gray-300 p-2 text-sm disabled:bg-gray-100"
               />
               <button
                 type="button"
                 onClick={() => removeRow(i)}
-                className="rounded border border-red-300 px-3 text-sm text-red-600 hover:bg-red-50"
+                className="col-span-2 rounded border border-red-300 px-2 text-sm text-red-600 hover:bg-red-50"
               >
                 Remove
               </button>
@@ -124,6 +170,9 @@ export default function InvoiceLineItemsEditor({
         >
           + Add line item
         </button>
+        <p className="mt-2 text-xs text-gray-400">
+          For hourly rows, the rate is the R/hr shown for reference and the amount is what you&apos;ve billed so far (R0 until you know the hours).
+        </p>
       </div>
 
       <div className="flex items-center justify-between border-t pt-3">

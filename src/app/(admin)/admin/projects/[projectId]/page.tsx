@@ -3,7 +3,10 @@ import { notFound } from 'next/navigation'
 import { updateProject, deleteProject, addProjectUpdate, uploadProjectDocument, addChangelogEntry, addInternalNote } from '../actions'
 import DocumentRow from '../document-row'
 import ConfirmSubmitButton from '@/components/confirm-submit-button'
+import ExpiryBadge from '@/components/expiry-badge'
 
+type LineItem = { label: string; price: number; recurring?: boolean }
+type HourlyItem = { label: string; rate: number; unit: string }
 
 const statusLabels: Record<string, string> = {
   planning: 'Planning',
@@ -30,6 +33,10 @@ export default async function ProjectDetailPage({
   if (!project) {
     notFound()
   }
+
+  const { data: linkedQuote } = project.quote_id
+    ? await supabase.from('quotes').select('*').eq('id', project.quote_id).single()
+    : { data: null }
 
   const { data: updates } = await supabase
     .from('project_updates')
@@ -65,8 +72,17 @@ export default async function ProjectDetailPage({
     <div className="p-8 max-w-2xl">
       <h1 className="mb-1 text-2xl font-bold">{project.name}</h1>
       <p className="mb-2 text-sm text-gray-500">
-        {project.project_number} • {project.profiles?.full_name || project.profiles?.email}
+        {project.project_number} • {project.profiles?.full_name || project.profiles?.email || `${project.guest_name} (guest)`}
       </p>
+
+      {!project.client_id && (
+        <div className="mb-6 rounded border bg-amber-50 p-3 text-sm">
+          <p className="font-medium text-amber-800">Guest client — no portal account</p>
+          <p className="text-amber-700">{project.guest_name}</p>
+          {project.guest_email && <p className="text-amber-700">{project.guest_email}</p>}
+          {project.guest_phone && <p className="text-amber-700">{project.guest_phone}</p>}
+        </div>
+      )}
       <div className="mb-6">
         <div className="mb-1 flex justify-between text-xs text-gray-500">
           <span>Progress</span>
@@ -76,6 +92,97 @@ export default async function ProjectDetailPage({
           <div className="h-full bg-blue-600" style={{ width: `${project.progress_percent}%` }} />
         </div>
       </div>
+
+      {linkedQuote && (
+        <div className="mb-6 rounded border p-4">
+          <h2 className="mb-3 font-semibold">Quote Pricing ({linkedQuote.quote_ref})</h2>
+          {(() => {
+            const lineItems = linkedQuote.line_items as LineItem[]
+            const hourlyItems = (linkedQuote.hourly_items || []) as HourlyItem[]
+            const onceOffItems = lineItems.filter((i) => !i.recurring)
+            const monthlyItems = lineItems.filter((i) => i.recurring)
+
+                {project.show_domain_ssl && (
+        <div className="mb-6 rounded border p-4">
+          <h2 className="mb-3 font-semibold">Domain &amp; SSL</h2>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+            {project.domain_name && (
+              <div><span className="text-gray-500">Domain:</span> {project.domain_name}</div>
+            )}
+            {project.registrar && (
+              <div><span className="text-gray-500">Registrar:</span> {project.registrar}</div>
+            )}
+            {project.domain_expiry && (
+              <div className="flex items-center gap-2">
+                <span className="text-gray-500">Domain Expiry:</span> {project.domain_expiry}
+                <ExpiryBadge date={project.domain_expiry} />
+              </div>
+            )}
+            {project.ssl_provider && (
+              <div><span className="text-gray-500">SSL Provider:</span> {project.ssl_provider}</div>
+            )}
+            {project.ssl_expiry && (
+              <div className="flex items-center gap-2">
+                <span className="text-gray-500">SSL Expiry:</span> {project.ssl_expiry}
+                <ExpiryBadge date={project.ssl_expiry} />
+              </div>
+            )}
+            {project.hosting_provider && (
+              <div><span className="text-gray-500">Hosting:</span> {project.hosting_provider}</div>
+            )}
+            {project.dns_provider && (
+              <div><span className="text-gray-500">DNS:</span> {project.dns_provider}</div>
+            )}
+            <div><span className="text-gray-500">Auto-renew:</span> {project.auto_renew ? 'Yes' : 'No'}</div>
+          </div>
+        </div>
+      )}  
+
+            return (
+              <div className="space-y-3">
+                {onceOffItems.length > 0 && (
+                  <div>
+                    <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-400">Once-off</p>
+                    {onceOffItems.map((item, i) => (
+                      <div key={i} className="flex justify-between text-sm text-gray-600">
+                        <span>{item.label}</span><span>R{item.price.toFixed(2)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {monthlyItems.length > 0 && (
+                  <div>
+                    <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-400">Monthly</p>
+                    {monthlyItems.map((item, i) => (
+                      <div key={i} className="flex justify-between text-sm text-gray-600">
+                        <span>{item.label}</span><span>R{item.price.toFixed(2)}/mo</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {hourlyItems.length > 0 && (
+                  <div>
+                    <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-400">Hourly</p>
+                    {hourlyItems.map((item, i) => (
+                      <div key={i} className="flex justify-between text-sm text-gray-600">
+                        <span>{item.label} ({item.unit})</span><span>R{item.rate.toFixed(2)}/hr</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div className="flex justify-between border-t pt-2 font-semibold">
+                  <span>Once-off total</span><span>R{linkedQuote.once_off_total}</span>
+                </div>
+                {linkedQuote.monthly_total > 0 && (
+                  <div className="flex justify-between font-semibold">
+                    <span>Monthly total</span><span>R{linkedQuote.monthly_total}/mo</span>
+                  </div>
+                )}
+              </div>
+            )
+          })()}
+        </div>
+      )}
 
       <div className="mb-8 rounded border-2 border-dashed border-amber-300 bg-amber-50 p-4">
         <h2 className="mb-1 font-semibold text-amber-900">🔒 Internal Notes (never shown to client)</h2>
@@ -149,7 +256,7 @@ export default async function ProjectDetailPage({
           </div>
         </div>
 
-        <div>
+                <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Features for this project</label>
           <div className="flex gap-4 text-sm">
             <label className="flex items-center gap-2">
@@ -160,10 +267,54 @@ export default async function ProjectDetailPage({
               <input type="checkbox" name="show_changelog" defaultChecked={project.show_changelog} />
               Show Changelog
             </label>
+            <label className="flex items-center gap-2">
+              <input type="checkbox" name="show_domain_ssl" defaultChecked={project.show_domain_ssl} />
+              Show Domain &amp; SSL
+            </label>
           </div>
           <p className="mt-1 text-xs text-gray-400">
-            Turn off for simpler engagements (support, networking, ad campaigns) that don&apos;t need milestone tracking.
+            Turn off Timeline/Changelog for simpler engagements. Turn on Domain &amp; SSL for web/ecommerce projects.
           </p>
+        </div>
+
+        <div className="rounded border p-3">
+          <p className="mb-2 text-sm font-medium text-gray-700">Domain &amp; SSL Details</p>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs text-gray-600">Domain Name</label>
+              <input type="text" name="domain_name" defaultValue={project.domain_name || ''} placeholder="example.co.za" className="mt-1 w-full rounded border border-gray-300 p-2 text-sm" />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-600">Registrar</label>
+              <input type="text" name="registrar" defaultValue={project.registrar || ''} placeholder="e.g. Domains.co.za" className="mt-1 w-full rounded border border-gray-300 p-2 text-sm" />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-600">Domain Expiry</label>
+              <input type="date" name="domain_expiry" defaultValue={project.domain_expiry || ''} className="mt-1 w-full rounded border border-gray-300 p-2 text-sm" />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-600">SSL Provider</label>
+              <input type="text" name="ssl_provider" defaultValue={project.ssl_provider || ''} placeholder="e.g. Let's Encrypt" className="mt-1 w-full rounded border border-gray-300 p-2 text-sm" />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-600">SSL Expiry</label>
+              <input type="date" name="ssl_expiry" defaultValue={project.ssl_expiry || ''} className="mt-1 w-full rounded border border-gray-300 p-2 text-sm" />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-600">Hosting Provider</label>
+              <input type="text" name="hosting_provider" defaultValue={project.hosting_provider || ''} placeholder="e.g. Vercel" className="mt-1 w-full rounded border border-gray-300 p-2 text-sm" />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-600">DNS Provider</label>
+              <input type="text" name="dns_provider" defaultValue={project.dns_provider || ''} placeholder="e.g. Cloudflare" className="mt-1 w-full rounded border border-gray-300 p-2 text-sm" />
+            </div>
+            <div className="flex items-end pb-2">
+              <label className="flex items-center gap-2 text-xs text-gray-600">
+                <input type="checkbox" name="auto_renew" defaultChecked={project.auto_renew} />
+                Auto-renew enabled
+              </label>
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3">

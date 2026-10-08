@@ -69,30 +69,45 @@ export default function PrintQuoteButton({
           <td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right;">R${item.rate.toFixed(2)}/hr</td>
         </tr>`).join('')
 
-    const html = `
+        const html = `
       <!DOCTYPE html>
       <html>
         <head>
           <title>Quote ${quoteRef}</title>
           <style>
             body { font-family: Arial, sans-serif; color: #1a1a1a; padding: 40px; max-width: 700px; margin: 0 auto; }
-            .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #2563eb; padding-bottom: 20px; margin-bottom: 30px; }
+            .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #2563eb; padding-bottom: 20px; margin-bottom: 20px; }
             .logo-placeholder { width: 160px; height: 50px; border: 1px dashed #ccc; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #999; }
+            .company-details { margin-top: 8px; font-size: 12px; color: #777; line-height: 1.5; }
             .meta { text-align: right; font-size: 13px; color: #555; }
             h1 { font-size: 22px; margin: 0 0 4px; }
             h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: #888; margin: 20px 0 6px; }
+            .parties { display: flex; justify-content: space-between; gap: 20px; margin: 20px 0; }
+            .party { flex: 1; font-size: 13px; color: #444; }
+            .party h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #999; margin: 0 0 6px; }
             table { width: 100%; border-collapse: collapse; }
             .totals { margin-top: 20px; border-top: 2px solid #333; padding-top: 12px; }
             .totals div { display: flex; justify-content: space-between; padding: 4px 0; }
             .grand { font-size: 20px; font-weight: bold; color: #2563eb; border-top: 1px solid #ddd; padding-top: 10px; margin-top: 6px; }
-            .client-info { margin-top: 16px; font-size: 13px; color: #444; }
-            .footer { margin-top: 40px; font-size: 12px; color: #999; border-top: 1px solid #eee; padding-top: 16px; }
             .hourly-note { font-size: 11px; color: #999; margin-top: 4px; }
+            .notices { margin-top: 30px; font-size: 11px; color: #888; line-height: 1.6; border-top: 1px solid #eee; padding-top: 16px; }
+            .notices h4 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #999; margin: 12px 0 4px; }
+            .notices h4:first-child { margin-top: 0; }
+            .stamp { margin-top: 24px; display: inline-block; border: 1.5px solid #2563eb; border-radius: 6px; padding: 10px 16px; font-size: 11px; color: #2563eb; }
+            .footer { margin-top: 30px; font-size: 11px; color: #bbb; text-align: center; }
           </style>
         </head>
         <body>
           <div class="header">
-            <div class="logo-placeholder">CROLOFT LOGO</div>
+            <div>
+              <div class="logo-placeholder">CROLOFT LOGO</div>
+              <div class="company-details">
+                Croloft Technologies (Pty) Ltd<br/>
+                Reg No: 2026/000000/07 (placeholder)<br/>
+                123 Example Street, Durban, 4001<br/>
+                accounts@croloft.com · +27 00 000 0000
+              </div>
+            </div>
             <div class="meta">
               <div><strong>Quote Ref:</strong> ${quoteRef}</div>
               <div><strong>Date:</strong> ${dateStr}</div>
@@ -102,9 +117,18 @@ export default function PrintQuoteButton({
           <h1>${productName}</h1>
           <p style="color:#666;font-size:13px;">Estimate prepared by Croloft Technologies</p>
 
-          <div class="client-info">
-            <div><strong>Prepared for:</strong> ${clientName}</div>
-            <div>${clientEmail}</div>
+          <div class="parties">
+            <div class="party">
+              <h3>Prepared For</h3>
+              <div>${clientName}</div>
+              <div>${clientEmail}</div>
+            </div>
+            <div class="party">
+              <h3>From</h3>
+              <div>Croloft Technologies (Pty) Ltd</div>
+              <div>accounts@croloft.com</div>
+              <div>+27 00 000 0000</div>
+            </div>
           </div>
 
           ${onceOffHtml ? `<h3>Once-off</h3><table>${onceOffHtml}</table>` : ''}
@@ -117,10 +141,21 @@ export default function PrintQuoteButton({
             <div class="grand"><span>Combined (Year 1)</span><span>R${(onceOffTotal + monthlyTotal * 12).toFixed(2)}</span></div>
           </div>
 
-          <div class="footer">
-            This is an estimate only and does not constitute a binding invoice. Prices are subject to change.
-            Quote your reference number above if you contact us about this estimate.
+          <div class="notices">
+            <h4>Validity</h4>
+            <p>This estimate is valid for 30 days from the date of issue. Prices are subject to change thereafter.</p>
+            <h4>Terms</h4>
+            <p>This is an estimate only and does not constitute a binding invoice. A formal invoice will be issued upon acceptance and commencement of work. Please reference the quote number above in all correspondence.</p>
+            <h4>Notes</h4>
+            <p>Scope and pricing are based on the configuration selected at time of quoting. Changes to scope may affect final pricing.</p>
           </div>
+
+          <div class="stamp">
+            Electronically generated quote — no signature required<br/>
+            Ref: ${quoteRef}
+          </div>
+
+          <div class="footer">Croloft Technologies — Thank you for considering us.</div>
         </body>
       </html>
     `

@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { buildInvoiceItems } from '@/lib/invoice-items'
 
 export async function convertQuoteToProject(formData: FormData): Promise<void> {
   const supabase = await createClient()
@@ -16,7 +17,7 @@ export async function convertQuoteToProject(formData: FormData): Promise<void> {
 
   const { data: quote } = await supabase
     .from('quotes')
-    .select('line_items, once_off_total')
+    .select('line_items, hourly_items')
     .eq('id', quote_id)
     .single()
 
@@ -37,11 +38,12 @@ export async function convertQuoteToProject(formData: FormData): Promise<void> {
 
   if (error || !project) return
 
-  // Auto-generate the initial invoice from the quote's once-off pricing
   if (quote) {
-    const onceOffItems = (quote.line_items as { label: string; price: number; recurring?: boolean }[])
-      .filter((item) => !item.recurring)
-      .map((item) => ({ label: item.label, price: item.price }))
+    const { items, total } = buildInvoiceItems(
+      (quote.line_items || []) as { label: string; price: number; recurring?: boolean }[],
+      (quote.hourly_items || []) as { label: string; rate: number; unit: string }[],
+      name.trim()
+    )
 
     const invoice_number = `INV-${Date.now().toString().slice(-8)}`
     await supabase.from('invoices').insert({
@@ -49,8 +51,9 @@ export async function convertQuoteToProject(formData: FormData): Promise<void> {
       project_id: project.id,
       invoice_number,
       title: `Invoice for ${name.trim()}`,
-      line_items: onceOffItems.length > 0 ? onceOffItems : [{ label: name.trim(), price: 0 }],
-      total: quote.once_off_total || 0,
+      line_items: items,
+      total,
+      source: 'project_conversion',
     })
   }
 

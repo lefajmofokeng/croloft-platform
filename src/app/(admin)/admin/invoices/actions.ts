@@ -10,13 +10,18 @@ export async function createInvoice(formData: FormData): Promise<void> {
   const supabase = await createClient()
 
   const client_id = formData.get('client_id') as string
+  const guest_name = formData.get('guest_name') as string
+  const guest_email = formData.get('guest_email') as string
+  const guest_phone = formData.get('guest_phone') as string
+  const guest_address = formData.get('guest_address') as string
   const project_id = formData.get('project_id') as string
   const title = formData.get('title') as string
   const due_date = formData.get('due_date') as string
   const labels = formData.getAll('item_label') as string[]
   const prices = formData.getAll('item_price') as string[]
 
-  if (!client_id || !title?.trim()) return
+  if (!title?.trim()) return
+  if (!client_id && !guest_name?.trim()) return
 
   const line_items: LineItem[] = labels
     .map((label, i) => ({ label: label.trim(), price: parseFloat(prices[i]) || 0 }))
@@ -28,7 +33,11 @@ export async function createInvoice(formData: FormData): Promise<void> {
   const invoice_number = `INV-${Date.now().toString().slice(-8)}`
 
   await supabase.from('invoices').insert({
-    client_id,
+    client_id: client_id || null,
+    guest_name: client_id ? null : guest_name.trim(),
+    guest_email: client_id ? null : guest_email?.trim() || null,
+    guest_phone: client_id ? null : guest_phone?.trim() || null,
+    guest_address: client_id ? null : guest_address?.trim() || null,
     project_id: project_id || null,
     invoice_number,
     title: title.trim(),
@@ -65,7 +74,12 @@ export async function deleteInvoice(formData: FormData): Promise<void> {
   redirect('/admin/invoices')
 }
 
-type InvoiceLineItem = { label: string; price: number }
+type InvoiceLineItem = {
+  label: string
+  price: number
+  cycle?: 'once_off' | 'monthly' | 'hourly'
+  rate?: number
+}
 
 export async function updateInvoiceDetails(data: {
   invoiceId: string

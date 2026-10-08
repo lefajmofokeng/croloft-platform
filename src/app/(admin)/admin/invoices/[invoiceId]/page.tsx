@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { updateInvoiceStatus, deleteInvoice } from '../actions'
 import ConfirmSubmitButton from '@/components/confirm-submit-button';
 import InvoiceLineItemsEditor from '../invoice-line-items-editor';
+import AdminPrintInvoiceButton from '../print-invoice-button'
 
 type LineItem = { label: string; price: number }
 
@@ -41,9 +42,35 @@ export default async function InvoiceDetailPage({
           {invoice.status}
         </span>
       </div>
+
+      <AdminPrintInvoiceButton
+        invoiceNumber={invoice.invoice_number}
+        title={invoice.title}
+        lineItems={lineItems}
+        total={invoice.total}
+        issueDate={invoice.issue_date}
+        dueDate={invoice.due_date}
+        status={invoice.status}
+        clientName={invoice.profiles?.full_name || invoice.profiles?.email || invoice.guest_name || ''}
+        clientEmail={invoice.profiles?.email || invoice.guest_email || ''}
+        clientPhone={invoice.guest_phone || ''}
+        clientAddress={invoice.guest_address || ''}
+      />
+
       <p className="mb-6 text-sm text-gray-500">
-        {invoice.invoice_number} • {invoice.profiles?.full_name || invoice.profiles?.email}
+        {invoice.invoice_number} •{' '}
+        {invoice.profiles?.full_name || invoice.profiles?.email || `${invoice.guest_name} (guest)`}
       </p>
+
+      {!invoice.client_id && (
+        <div className="mb-6 rounded border bg-amber-50 p-3 text-sm">
+          <p className="font-medium text-amber-800">Guest client — no portal account</p>
+          <p className="text-amber-700">{invoice.guest_name}</p>
+          {invoice.guest_email && <p className="text-amber-700">{invoice.guest_email}</p>}
+          {invoice.guest_phone && <p className="text-amber-700">{invoice.guest_phone}</p>}
+          {invoice.guest_address && <p className="whitespace-pre-line text-amber-700">{invoice.guest_address}</p>}
+        </div>
+      )}
 
       <InvoiceLineItemsEditor
         invoiceId={invoice.id}

@@ -9,7 +9,7 @@ type LineItem = {
   rate?: number
 }
 
-export default function PrintInvoiceButton({
+export default function AdminPrintInvoiceButton({
   invoiceNumber,
   title,
   lineItems,
@@ -20,6 +20,7 @@ export default function PrintInvoiceButton({
   clientName,
   clientEmail,
   clientPhone,
+  clientAddress,
 }: {
   invoiceNumber: string
   title: string
@@ -31,6 +32,7 @@ export default function PrintInvoiceButton({
   clientName: string
   clientEmail: string
   clientPhone: string
+  clientAddress?: string
 }) {
   function handlePrint() {
     const money = (n: number) => `R${n.toFixed(2)}`
@@ -91,9 +93,7 @@ export default function PrintInvoiceButton({
         <body>
           <div class="header">
             <div>
-              <div class="logo-placeholder">
-              <img src="./images/icon.png" style="height: 40px">
-              </div>
+              <div class="logo-placeholder">CROLOFT LOGO</div>
               <div class="company-details">
                 Croloft Technologies (Pty) Ltd<br/>
                 Reg No: 2026/000000/07 (placeholder)<br/>
@@ -117,6 +117,7 @@ export default function PrintInvoiceButton({
               <div>${clientName}</div>
               ${clientEmail ? `<div>${clientEmail}</div>` : ''}
               ${clientPhone ? `<div>${clientPhone}</div>` : ''}
+              ${clientAddress ? `<div style="white-space:pre-line;">${clientAddress}</div>` : ''}
             </div>
             <div class="party">
               <h3>From</h3>
@@ -184,7 +185,7 @@ export default function PrintInvoiceButton({
   return (
     <button
       onClick={handlePrint}
-      className="mt-4 w-full rounded border border-blue-600 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50"
+      className="rounded border border-blue-600 px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50"
     >
       Print / Save as PDF
     </button>

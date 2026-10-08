@@ -36,7 +36,7 @@ export default async function AdminInvoicesPage() {
               <div>
                 <p className="font-medium">{invoice.title}</p>
                 <p className="text-sm text-gray-500">
-                  {invoice.profiles?.full_name || invoice.profiles?.email} • {invoice.invoice_number}
+                  {invoice.profiles?.full_name || invoice.profiles?.email || `${invoice.guest_name} (guest)`} • {invoice.invoice_number}
                 </p>
               </div>
               <div className="flex items-center gap-3">

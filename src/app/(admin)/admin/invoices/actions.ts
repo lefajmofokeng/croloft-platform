@@ -17,6 +17,7 @@ export async function createInvoice(formData: FormData): Promise<void> {
   const project_id = formData.get('project_id') as string
   const title = formData.get('title') as string
   const due_date = formData.get('due_date') as string
+  const source = (formData.get('source') as string) || 'other'
   const labels = formData.getAll('item_label') as string[]
   const prices = formData.getAll('item_price') as string[]
 
@@ -43,7 +44,7 @@ export async function createInvoice(formData: FormData): Promise<void> {
     title: title.trim(),
     line_items,
     total,
-    due_date: due_date || null,
+    due_date: due_date || null, source,
   })
 
   revalidatePath('/admin/invoices')

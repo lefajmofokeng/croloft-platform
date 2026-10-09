@@ -4,6 +4,7 @@ import { updateInvoiceStatus, deleteInvoice } from '../actions'
 import ConfirmSubmitButton from '@/components/confirm-submit-button';
 import InvoiceLineItemsEditor from '../invoice-line-items-editor';
 import AdminPrintInvoiceButton from '../print-invoice-button'
+import { invoiceSourceLabel } from '@/lib/invoice-source'
 
 type LineItem = { label: string; price: number }
 
@@ -60,6 +61,7 @@ export default async function InvoiceDetailPage({
       <p className="mb-6 text-sm text-gray-500">
         {invoice.invoice_number} •{' '}
         {invoice.profiles?.full_name || invoice.profiles?.email || `${invoice.guest_name} (guest)`}
+        {' '}• {invoiceSourceLabel(invoice.source)}
       </p>
 
       {!invoice.client_id && (

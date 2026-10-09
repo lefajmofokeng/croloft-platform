@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { createInvoice } from './actions'
+import { INVOICE_SOURCES } from '@/lib/invoice-source'
 
 type Client = { id: string; full_name: string | null; email: string | null }
 type Project = { id: string; name: string; client_id: string }
@@ -97,6 +98,16 @@ export default function InvoiceForm({
       <div>
         <label className="block text-sm font-medium text-gray-700">Due Date (optional)</label>
         <input type="date" name="due_date" className="mt-1 w-full rounded border border-gray-300 p-2" />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700">How did this invoice come about?</label>
+        <select name="source" required defaultValue="" className="mt-1 w-full rounded border border-gray-300 p-2">
+          <option value="">Select a reason</option>
+          {INVOICE_SOURCES.map((s) => (
+            <option key={s.value} value={s.value}>{s.label}</option>
+          ))}
+        </select>
       </div>
 
       <div>

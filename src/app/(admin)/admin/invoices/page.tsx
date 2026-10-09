@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
+import { invoiceSourceLabel } from '@/lib/invoice-source'
 
 const statusColors: Record<string, string> = {
   unpaid: 'bg-yellow-100 text-yellow-800',
@@ -36,7 +37,7 @@ export default async function AdminInvoicesPage() {
               <div>
                 <p className="font-medium">{invoice.title}</p>
                 <p className="text-sm text-gray-500">
-                  {invoice.profiles?.full_name || invoice.profiles?.email || `${invoice.guest_name} (guest)`} • {invoice.invoice_number}
+                 {invoice.profiles?.full_name || invoice.profiles?.email || `${invoice.guest_name} (guest)`} • {invoice.invoice_number} • {invoiceSourceLabel(invoice.source)}
                 </p>
               </div>
               <div className="flex items-center gap-3">

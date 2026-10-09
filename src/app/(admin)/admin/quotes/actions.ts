@@ -9,24 +9,36 @@ export async function convertQuoteToProject(formData: FormData): Promise<void> {
   const supabase = await createClient()
 
   const quote_id = formData.get('quote_id') as string
-  const client_id = formData.get('client_id') as string
+  const client_id = (formData.get('client_id') as string) || ''
   const name = formData.get('name') as string
   const description = formData.get('description') as string
 
-  if (!quote_id || !client_id || !name?.trim()) return
+  if (!quote_id || !name?.trim()) return
 
   const { data: quote } = await supabase
     .from('quotes')
-    .select('line_items, hourly_items')
+    .select('line_items, hourly_items, client_name, client_email, client_phone')
     .eq('id', quote_id)
     .single()
+
+  if (!quote) return
+
+  // No account chosen: carry the quote's own contact details as a guest client
+  const guest = client_id
+    ? { guest_name: null, guest_email: null, guest_phone: null }
+    : {
+        guest_name: quote.client_name,
+        guest_email: quote.client_email || null,
+        guest_phone: quote.client_phone || null,
+      }
 
   const project_number = `PRJ-${Date.now().toString().slice(-8)}`
 
   const { data: project, error } = await supabase
     .from('projects')
     .insert({
-      client_id,
+      client_id: client_id || null,
+      ...guest,
       quote_id,
       project_number,
       name: name.trim(),
@@ -38,24 +50,23 @@ export async function convertQuoteToProject(formData: FormData): Promise<void> {
 
   if (error || !project) return
 
-  if (quote) {
-    const { items, total } = buildInvoiceItems(
-      (quote.line_items || []) as { label: string; price: number; recurring?: boolean }[],
-      (quote.hourly_items || []) as { label: string; rate: number; unit: string }[],
-      name.trim()
-    )
+  const { items, total } = buildInvoiceItems(
+    (quote.line_items || []) as { label: string; price: number; recurring?: boolean }[],
+    (quote.hourly_items || []) as { label: string; rate: number; unit: string }[],
+    name.trim()
+  )
 
-    const invoice_number = `INV-${Date.now().toString().slice(-8)}`
-    await supabase.from('invoices').insert({
-      client_id,
-      project_id: project.id,
-      invoice_number,
-      title: `Invoice for ${name.trim()}`,
-      line_items: items,
-      total,
-      source: 'project_conversion',
-    })
-  }
+  const invoice_number = `INV-${Date.now().toString().slice(-8)}`
+  await supabase.from('invoices').insert({
+    client_id: client_id || null,
+    ...guest,
+    project_id: project.id,
+    invoice_number,
+    title: `Invoice for ${name.trim()}`,
+    line_items: items,
+    total,
+    source: 'project_conversion',
+  })
 
   revalidatePath('/admin/projects')
   revalidatePath('/admin/invoices')

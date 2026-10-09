@@ -20,11 +20,10 @@ export default async function ConvertQuotePage({
     notFound()
   }
 
-  // Figure out the best client match: direct user_id link first,
-  // otherwise try matching the guest email to an existing client profile
+  // Best client match: direct link first, otherwise try the quote's email against client profiles
   let matchedClientId = quote.user_id
 
-  if (!matchedClientId) {
+  if (!matchedClientId && quote.client_email) {
     const { data: matchedProfile } = await supabase
       .from('profiles')
       .select('id')
@@ -59,8 +58,12 @@ export default async function ConvertQuotePage({
               </p>
             </>
           ) : (
-            <select name="client_id" defaultValue={matchedClientId || ''} required className="mt-1 w-full rounded border border-gray-300 p-2">
-              <option value="">Select a client</option>
+            <select
+              name="client_id"
+              defaultValue={matchedClientId || ''}
+              className="mt-1 w-full rounded border border-gray-300 p-2"
+            >
+              <option value="">No account — keep as guest client</option>
               {clients?.map((client) => (
                 <option key={client.id} value={client.id}>
                   {client.full_name || client.email}
@@ -69,16 +72,25 @@ export default async function ConvertQuotePage({
               ))}
             </select>
           )}
+
           {!quote.user_id && !matchedClientId && (
             <p className="mt-1 text-xs text-amber-600">
-              No account found matching {quote.client_email} — this quote was submitted as a guest. Select the correct client manually, or ask them to sign up first.
+              {quote.client_email
+                ? `No account found for ${quote.client_email}. The project will be created as a guest project for ${quote.client_name}, and will link to their account automatically if they sign up with that email.`
+                : `This quote has no email, so a guest project for ${quote.client_name} can't link automatically later. Pick an account instead if one exists.`}
             </p>
           )}
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700">Project Name</label>
-          <input type="text" name="name" defaultValue={quote.product_name} required className="mt-1 w-full rounded border border-gray-300 p-2" />
+          <input
+            type="text"
+            name="name"
+            defaultValue={quote.product_name}
+            required
+            className="mt-1 w-full rounded border border-gray-300 p-2"
+          />
         </div>
 
         <div>
@@ -86,7 +98,7 @@ export default async function ConvertQuotePage({
           <textarea
             name="description"
             rows={3}
-            defaultValue={`Converted from quote ${quote.quote_ref} (R${quote.once_off_total}${quote.monthly_total > 0 ? ` + R${quote.monthly_total}/mo` : ''})`}
+            defaultValue={`Converted from quote ${quote.quote_ref}`}
             className="mt-1 w-full rounded border border-gray-300 p-2"
           />
         </div>

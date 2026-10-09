@@ -4,6 +4,7 @@ import { updateProject, deleteProject, addProjectUpdate, uploadProjectDocument, 
 import DocumentRow from '../document-row'
 import ConfirmSubmitButton from '@/components/confirm-submit-button'
 import ExpiryBadge from '@/components/expiry-badge'
+import QuotePricingTable from '@/components/quote-pricing-table'
 
 type LineItem = { label: string; price: number; recurring?: boolean }
 type HourlyItem = { label: string; rate: number; unit: string }
@@ -66,9 +67,9 @@ export default async function ProjectDetailPage({
     .from('project_internal_notes')
     .select('*')
     .eq('project_id', projectId)
-    .order('created_at', { ascending: false })  
-  
-    return (
+    .order('created_at', { ascending: false })
+
+  return (
     <div className="p-8 max-w-2xl">
       <h1 className="mb-1 text-2xl font-bold">{project.name}</h1>
       <p className="mb-2 text-sm text-gray-500">
@@ -96,91 +97,12 @@ export default async function ProjectDetailPage({
       {linkedQuote && (
         <div className="mb-6 rounded border p-4">
           <h2 className="mb-3 font-semibold">Quote Pricing ({linkedQuote.quote_ref})</h2>
-          {(() => {
-            const lineItems = linkedQuote.line_items as LineItem[]
-            const hourlyItems = (linkedQuote.hourly_items || []) as HourlyItem[]
-            const onceOffItems = lineItems.filter((i) => !i.recurring)
-            const monthlyItems = lineItems.filter((i) => i.recurring)
-
-                {project.show_domain_ssl && (
-        <div className="mb-6 rounded border p-4">
-          <h2 className="mb-3 font-semibold">Domain &amp; SSL</h2>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-            {project.domain_name && (
-              <div><span className="text-gray-500">Domain:</span> {project.domain_name}</div>
-            )}
-            {project.registrar && (
-              <div><span className="text-gray-500">Registrar:</span> {project.registrar}</div>
-            )}
-            {project.domain_expiry && (
-              <div className="flex items-center gap-2">
-                <span className="text-gray-500">Domain Expiry:</span> {project.domain_expiry}
-                <ExpiryBadge date={project.domain_expiry} />
-              </div>
-            )}
-            {project.ssl_provider && (
-              <div><span className="text-gray-500">SSL Provider:</span> {project.ssl_provider}</div>
-            )}
-            {project.ssl_expiry && (
-              <div className="flex items-center gap-2">
-                <span className="text-gray-500">SSL Expiry:</span> {project.ssl_expiry}
-                <ExpiryBadge date={project.ssl_expiry} />
-              </div>
-            )}
-            {project.hosting_provider && (
-              <div><span className="text-gray-500">Hosting:</span> {project.hosting_provider}</div>
-            )}
-            {project.dns_provider && (
-              <div><span className="text-gray-500">DNS:</span> {project.dns_provider}</div>
-            )}
-            <div><span className="text-gray-500">Auto-renew:</span> {project.auto_renew ? 'Yes' : 'No'}</div>
-          </div>
-        </div>
-      )}  
-
-            return (
-              <div className="space-y-3">
-                {onceOffItems.length > 0 && (
-                  <div>
-                    <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-400">Once-off</p>
-                    {onceOffItems.map((item, i) => (
-                      <div key={i} className="flex justify-between text-sm text-gray-600">
-                        <span>{item.label}</span><span>R{item.price.toFixed(2)}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {monthlyItems.length > 0 && (
-                  <div>
-                    <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-400">Monthly</p>
-                    {monthlyItems.map((item, i) => (
-                      <div key={i} className="flex justify-between text-sm text-gray-600">
-                        <span>{item.label}</span><span>R{item.price.toFixed(2)}/mo</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {hourlyItems.length > 0 && (
-                  <div>
-                    <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-400">Hourly</p>
-                    {hourlyItems.map((item, i) => (
-                      <div key={i} className="flex justify-between text-sm text-gray-600">
-                        <span>{item.label} ({item.unit})</span><span>R{item.rate.toFixed(2)}/hr</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                <div className="flex justify-between border-t pt-2 font-semibold">
-                  <span>Once-off total</span><span>R{linkedQuote.once_off_total}</span>
-                </div>
-                {linkedQuote.monthly_total > 0 && (
-                  <div className="flex justify-between font-semibold">
-                    <span>Monthly total</span><span>R{linkedQuote.monthly_total}/mo</span>
-                  </div>
-                )}
-              </div>
-            )
-          })()}
+          <QuotePricingTable
+            lineItems={(linkedQuote.line_items || []) as { label: string; price: number; recurring?: boolean }[]}
+            hourlyItems={(linkedQuote.hourly_items || []) as { label: string; rate: number; unit: string }[]}
+            onceOffTotal={linkedQuote.once_off_total}
+            monthlyTotal={linkedQuote.monthly_total}
+          />
         </div>
       )}
 

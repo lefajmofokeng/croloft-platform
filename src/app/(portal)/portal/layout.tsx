@@ -9,6 +9,7 @@ const navItems = [
   { label: 'Get a Quote', href: '/portal/pricing' },
   { label: 'Quotes', href: '/portal/quotes' },
   { label: 'Invoices', href: '/portal/invoices' },
+  { label: 'Credentials', href: '/portal/credentials' },
   { label: 'Support', href: '/portal/support' },
 ]
 

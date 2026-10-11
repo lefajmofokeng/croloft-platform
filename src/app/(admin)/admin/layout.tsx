@@ -9,6 +9,7 @@ const navItems = [
   { label: 'Invoices', href: '/admin/invoices' },
   { label: 'Support', href: '/admin/support' },
   { label: 'Clients', href: '/admin/clients' },
+  { label: 'Credentials', href: '/admin/credentials' },
 ]
 
 export default function AdminLayout({

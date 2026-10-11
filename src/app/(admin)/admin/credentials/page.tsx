@@ -15,9 +15,14 @@ export default async function AdminCredentialsPage() {
     <div className="p-8">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold">Access Credentials</h1>
-        <Link href="/admin/credentials/new" className="rounded bg-blue-600 px-4 py-2 text-white">
-          + Add Credential
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link href="/admin/credentials/log" className="text-sm text-gray-500 hover:text-gray-800">
+            Access log
+          </Link>
+          <Link href="/admin/credentials/new" className="rounded bg-blue-600 px-4 py-2 text-white">
+            + Add Credential
+          </Link>
+        </div>
       </div>
 
       <div className="space-y-2">
@@ -39,6 +44,9 @@ export default async function AdminCredentialsPage() {
                 {cred.shared_with_client && (
                   <span className="rounded bg-green-100 px-2 py-1 text-green-700">Shared with client</span>
                 )}
+                <Link href={`/admin/credentials/${cred.id}/edit`} className="ml-2 text-sm text-gray-500 hover:text-gray-800">
+                  Edit
+                </Link>
               </div>
             </div>
 

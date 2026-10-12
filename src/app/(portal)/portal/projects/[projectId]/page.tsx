@@ -6,6 +6,8 @@ import DocumentVersionHistory from '@/components/document-version-history'
 import { getClientDocumentVersionUrl } from '../actions'
 import ExpiryBadge from '@/components/expiry-badge'
 import QuotePricingTable from '@/components/quote-pricing-table'
+import SecretField from '@/components/secret-field'
+import { credentialTypeLabel, credentialEnvironmentLabel } from '@/lib/credential-options'
 
 type LineItem = { label: string; price: number; recurring?: boolean }
 type HourlyItem = { label: string; rate: number; unit: string }
@@ -35,6 +37,13 @@ export default async function PortalProjectDetailPage({
   if (!project) {
     notFound()
   }
+
+  const { data: projectCredentials } = await supabase
+    .from('access_credentials')
+    .select('*')
+    .eq('project_id', projectId)
+    .eq('shared_with_client', true)
+    .order('system_name')  
 
   const { data: linkedQuote } = project.quote_id
     ? await supabase.from('quotes').select('*').eq('id', project.quote_id).single()
@@ -203,6 +212,48 @@ export default async function PortalProjectDetailPage({
         showChangelog={project.show_changelog}
         documents={(documents || []).map((d) => ({ name: d.name, description: d.description }))}
       />
+
+      {projectCredentials && projectCredentials.length > 0 && (
+        <div className="mb-8 rounded border p-4">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="font-semibold">Access Credentials</h2>
+            <a href="/portal/credentials" className="text-xs text-blue-600 hover:underline">
+              All my credentials
+            </a>
+          </div>
+          <p className="mb-3 text-xs text-gray-500">
+            Passwords stay hidden until you click Reveal or Copy, and each click is recorded.
+          </p>
+
+          <div className="space-y-3">
+            {projectCredentials.map((cred) => (
+              <div key={cred.id} className="rounded border p-3 text-sm">
+                <div className="flex items-start justify-between">
+                  <p className="font-medium">{cred.system_name}</p>
+                  <p className="text-xs text-gray-500">
+                    {credentialTypeLabel(cred.type)}
+                    {cred.environment ? ` • ${credentialEnvironmentLabel(cred.environment)}` : ''}
+                  </p>
+                </div>
+
+                <div className="mt-2 space-y-1 text-gray-600">
+                  {cred.url && <div><span className="text-gray-400">URL:</span> {cred.url}</div>}
+                  {cred.username && <div><span className="text-gray-400">Username:</span> {cred.username}</div>}
+                  {cred.tenant && <div><span className="text-gray-400">Tenant:</span> {cred.tenant}</div>}
+                  {cred.role_access && <div><span className="text-gray-400">Role:</span> {cred.role_access}</div>}
+                  {cred.mfa_notes && <div><span className="text-gray-400">MFA:</span> {cred.mfa_notes}</div>}
+                  {cred.password_encrypted && (
+                    <SecretField credentialId={cred.id} field="password" label="Password" />
+                  )}
+                  {cred.secret_notes_encrypted && (
+                    <SecretField credentialId={cred.id} field="notes" label="Secret notes" />
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     
       <h2 className="mb-3 mt-8 font-semibold">Documents</h2>
       <div className="space-y-2">

@@ -26,6 +26,10 @@ export default async function EditCredentialPage({
     ? await supabase.from('projects').select('id, name').eq('client_id', cred.client_id).order('name')
     : { data: [] }
 
+  const { data: linkedProject } = cred.project_id
+    ? await supabase.from('projects').select('name').eq('id', cred.project_id).single()
+    : { data: null }  
+
   // Only these two true/false values go to the page. The stored values themselves never do.
   const hasPassword = !!cred.password_encrypted
   const hasNotes = !!cred.secret_notes_encrypted
@@ -44,18 +48,26 @@ export default async function EditCredentialPage({
         <input type="hidden" name="id" value={cred.id} />
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Linked Project (optional)</label>
-          <select
-            name="project_id"
-            defaultValue={cred.project_id || ''}
-            disabled={isGuest}
-            className="mt-1 w-full rounded border border-gray-300 p-2 text-sm disabled:bg-gray-100"
-          >
-            <option value="">None</option>
-            {projects?.map((project) => (
-              <option key={project.id} value={project.id}>{project.name}</option>
-            ))}
-          </select>
+          <label className="block text-sm font-medium text-gray-700">Linked Project</label>
+          {isGuest ? (
+            <>
+              <input type="hidden" name="project_id" value={cred.project_id || ''} />
+              <p className="mt-1 rounded border bg-gray-50 p-2 text-sm text-gray-600">
+                {linkedProject?.name || 'None'} (can be changed once the client has an account)
+              </p>
+            </>
+          ) : (
+            <select
+              name="project_id"
+              defaultValue={cred.project_id || ''}
+              className="mt-1 w-full rounded border border-gray-300 p-2 text-sm"
+            >
+              <option value="">None</option>
+              {projects?.map((project) => (
+                <option key={project.id} value={project.id}>{project.name}</option>
+              ))}
+            </select>
+          )}
         </div>
 
         <div className="grid grid-cols-2 gap-3">

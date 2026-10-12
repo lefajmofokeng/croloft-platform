@@ -6,77 +6,113 @@ import { CREDENTIAL_TYPES, CREDENTIAL_ENVIRONMENTS } from '@/lib/credential-opti
 
 type Client = { id: string; full_name: string | null; email: string | null }
 type Project = { id: string; name: string; client_id: string | null }
+type Preset = {
+  projectId: string
+  projectName: string
+  ownerLabel: string
+  clientId: string | null
+  guestName: string | null
+  guestEmail: string | null
+}
 
 export default function CredentialForm({
   clients,
   projects,
+  preset,
 }: {
   clients: Client[]
   projects: Project[]
+  preset?: Preset | null
 }) {
   const [mode, setMode] = useState<'existing' | 'guest'>('existing')
   const [clientId, setClientId] = useState('')
 
   const clientProjects = projects.filter((p) => p.client_id === clientId)
+  const isGuestOwner = preset ? !preset.clientId : mode === 'guest'
   const input = 'mt-1 w-full rounded border border-gray-300 p-2 text-sm'
 
   return (
     <form action={createCredential} className="space-y-4 rounded border p-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Client</label>
-        <div className="mt-1 flex gap-4 text-sm">
-          <label className="flex items-center gap-2">
-            <input type="radio" checked={mode === 'existing'} onChange={() => setMode('existing')} />
-            Existing client
-          </label>
-          <label className="flex items-center gap-2">
-            <input type="radio" checked={mode === 'guest'} onChange={() => setMode('guest')} />
-            New / guest client (not signed up)
-          </label>
-        </div>
-      </div>
-
-      {mode === 'existing' ? (
-        <select
-          name="client_id"
-          value={clientId}
-          onChange={(e) => setClientId(e.target.value)}
-          required
-          className="w-full rounded border border-gray-300 p-2"
-        >
-          <option value="">Select a client</option>
-          {clients.map((client) => (
-            <option key={client.id} value={client.id}>
-              {client.full_name || client.email}
-            </option>
-          ))}
-        </select>
+      {preset ? (
+        <>
+          <input type="hidden" name="project_id" value={preset.projectId} />
+          <input type="hidden" name="return_to" value={`/admin/projects/${preset.projectId}`} />
+          {preset.clientId ? (
+            <input type="hidden" name="client_id" value={preset.clientId} />
+          ) : (
+            <>
+              <input type="hidden" name="guest_name" value={preset.guestName || ''} />
+              <input type="hidden" name="guest_email" value={preset.guestEmail || ''} />
+            </>
+          )}
+          <div className="rounded border bg-gray-50 p-3 text-sm">
+            <p className="text-gray-500">Adding a credential for</p>
+            <p className="font-medium">{preset.projectName}</p>
+            <p className="text-gray-600">{preset.ownerLabel}</p>
+          </div>
+        </>
       ) : (
-        <div className="space-y-3 rounded border bg-gray-50 p-3">
+        <>
           <div>
-            <label className="block text-xs font-medium text-gray-600">Full Name or Company</label>
-            <input type="text" name="guest_name" required className={input} />
+            <label className="block text-sm font-medium text-gray-700">Client</label>
+            <div className="mt-1 flex gap-4 text-sm">
+              <label className="flex items-center gap-2">
+                <input type="radio" checked={mode === 'existing'} onChange={() => setMode('existing')} />
+                Existing client
+              </label>
+              <label className="flex items-center gap-2">
+                <input type="radio" checked={mode === 'guest'} onChange={() => setMode('guest')} />
+                New / guest client (not signed up)
+              </label>
+            </div>
           </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-600">Email (optional, enables auto-linking if they sign up later)</label>
-            <input type="email" name="guest_email" className={input} />
-          </div>
-        </div>
-      )}
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Linked Project (optional)</label>
-        <select
-          name="project_id"
-          disabled={mode === 'guest' || !clientId}
-          className="mt-1 w-full rounded border border-gray-300 p-2 text-sm disabled:bg-gray-100"
-        >
-          <option value="">None</option>
-          {clientProjects.map((project) => (
-            <option key={project.id} value={project.id}>{project.name}</option>
-          ))}
-        </select>
-      </div>
+          {mode === 'existing' ? (
+            <select
+              name="client_id"
+              value={clientId}
+              onChange={(e) => setClientId(e.target.value)}
+              required
+              className="w-full rounded border border-gray-300 p-2"
+            >
+              <option value="">Select a client</option>
+              {clients.map((client) => (
+                <option key={client.id} value={client.id}>
+                  {client.full_name || client.email}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <div className="space-y-3 rounded border bg-gray-50 p-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-600">Full Name or Company</label>
+                <input type="text" name="guest_name" required className={input} />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600">Email (optional, enables auto-linking if they sign up later)</label>
+                <input type="email" name="guest_email" className={input} />
+              </div>
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Linked Project (optional)</label>
+            <select
+              name="project_id"
+              disabled={mode === 'guest' || !clientId}
+              className="mt-1 w-full rounded border border-gray-300 p-2 text-sm disabled:bg-gray-100"
+            >
+              <option value="">None</option>
+              {clientProjects.map((project) => (
+                <option key={project.id} value={project.id}>{project.name}</option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-gray-400">
+              Pick a client first, then one of their projects. The easier way is the &quot;+ Add credential&quot; button on the project&apos;s own page, which fills all of this in for you (including guest projects).
+            </p>
+          </div>
+        </>
+      )}
 
       <div className="grid grid-cols-2 gap-3">
         <div>
@@ -137,11 +173,11 @@ export default function CredentialForm({
 
       <div className="rounded border bg-gray-50 p-3">
         <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" name="shared_with_client" disabled={mode === 'guest'} />
+          <input type="checkbox" name="shared_with_client" disabled={isGuestOwner} />
           Share with client (they&apos;ll see it in their portal)
         </label>
         <p className="mt-1 text-xs text-gray-400">
-          Off by default. {mode === 'guest' ? 'Not available until the client has an account.' : 'Only turn on for logins the client should hold themselves.'}
+          Off by default. {isGuestOwner ? 'Not available until the client has an account.' : 'Only turn on for logins the client should hold themselves.'}
         </p>
       </div>
 

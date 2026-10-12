@@ -28,6 +28,7 @@ export async function createCredential(formData: FormData): Promise<void> {
   const guest_name = formData.get('guest_name') as string
   const guest_email = formData.get('guest_email') as string
   const project_id = (formData.get('project_id') as string) || ''
+  const return_to = (formData.get('return_to') as string) || ''
   const system_name = formData.get('system_name') as string
   const type = (formData.get('type') as string) || 'application'
   const environment = (formData.get('environment') as string) || ''
@@ -60,11 +61,14 @@ export async function createCredential(formData: FormData): Promise<void> {
     mfa_notes: mfa_notes?.trim() || null,
     secret_notes_encrypted: secret_notes?.trim() ? encryptSecret(secret_notes) : null,
     last_changed: last_changed || null,
-    shared_with_client,
+    shared_with_client: client_id ? shared_with_client : false,
   })
 
   revalidatePath('/admin/credentials')
-  redirect('/admin/credentials')
+  if (project_id) revalidatePath(`/admin/projects/${project_id}`)
+
+  // Only ever redirect to a page inside the admin area
+  redirect(return_to.startsWith('/admin/') ? return_to : '/admin/credentials')
 }
 
 export async function updateCredential(formData: FormData): Promise<void> {

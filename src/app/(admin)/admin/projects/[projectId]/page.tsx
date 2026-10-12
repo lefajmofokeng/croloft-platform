@@ -5,6 +5,8 @@ import DocumentRow from '../document-row'
 import ConfirmSubmitButton from '@/components/confirm-submit-button'
 import ExpiryBadge from '@/components/expiry-badge'
 import QuotePricingTable from '@/components/quote-pricing-table'
+import SecretField from '@/components/secret-field'
+import { credentialTypeLabel, credentialEnvironmentLabel } from '@/lib/credential-options'
 
 type LineItem = { label: string; price: number; recurring?: boolean }
 type HourlyItem = { label: string; rate: number; unit: string }
@@ -34,6 +36,12 @@ export default async function ProjectDetailPage({
   if (!project) {
     notFound()
   }
+
+  const { data: projectCredentials } = await supabase
+    .from('access_credentials')
+    .select('*')
+    .eq('project_id', projectId)
+    .order('system_name')  
 
   const { data: linkedQuote } = project.quote_id
     ? await supabase.from('quotes').select('*').eq('id', project.quote_id).single()
@@ -326,6 +334,59 @@ export default async function ProjectDetailPage({
       {updates?.length === 0 && <p className="text-gray-500">No updates yet.</p>}
       </>
       )}
+
+      <div className="mb-8 rounded border p-4">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="font-semibold">Access Credentials</h2>
+          <a
+            href={`/admin/credentials/new?projectId=${project.id}`}
+            className="rounded bg-blue-600 px-3 py-1.5 text-sm text-white"
+          >
+            + Add credential
+          </a>
+        </div>
+
+        <div className="space-y-3">
+          {projectCredentials?.map((cred) => (
+            <div key={cred.id} className="rounded border p-3 text-sm">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="font-medium">{cred.system_name}</p>
+                  <p className="text-xs text-gray-500">
+                    {credentialTypeLabel(cred.type)}
+                    {cred.environment ? ` • ${credentialEnvironmentLabel(cred.environment)}` : ''}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {cred.shared_with_client && (
+                    <span className="rounded bg-green-100 px-2 py-0.5 text-xs text-green-700">Shared with client</span>
+                  )}
+                  <a href={`/admin/credentials/${cred.id}/edit`} className="text-xs text-gray-500 hover:text-gray-800">
+                    Edit
+                  </a>
+                </div>
+              </div>
+
+              <div className="mt-2 space-y-1 text-gray-600">
+                {cred.url && <div><span className="text-gray-400">URL:</span> {cred.url}</div>}
+                {cred.username && <div><span className="text-gray-400">Username:</span> {cred.username}</div>}
+                {cred.tenant && <div><span className="text-gray-400">Tenant:</span> {cred.tenant}</div>}
+                {cred.role_access && <div><span className="text-gray-400">Role:</span> {cred.role_access}</div>}
+                {cred.password_encrypted && (
+                  <SecretField credentialId={cred.id} field="password" label="Password" />
+                )}
+                {cred.secret_notes_encrypted && (
+                  <SecretField credentialId={cred.id} field="notes" label="Secret notes" />
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {projectCredentials?.length === 0 && (
+          <p className="text-sm text-gray-500">No credentials linked to this project yet.</p>
+        )}
+      </div>  
 
     <h2 className="mb-3 mt-8 font-semibold">Documents</h2>
       <form

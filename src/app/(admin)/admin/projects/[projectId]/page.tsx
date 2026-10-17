@@ -7,6 +7,9 @@ import ExpiryBadge from '@/components/expiry-badge'
 import QuotePricingTable from '@/components/quote-pricing-table'
 import SecretField from '@/components/secret-field'
 import { credentialTypeLabel, credentialEnvironmentLabel } from '@/lib/credential-options'
+import MetricForm from '../metric-form'
+import MetricsSection from '@/components/metrics-section'
+import { deleteMetric } from '../metrics-actions'
 
 type LineItem = { label: string; price: number; recurring?: boolean }
 type HourlyItem = { label: string; rate: number; unit: string }
@@ -76,6 +79,12 @@ export default async function ProjectDetailPage({
     .select('*')
     .eq('project_id', projectId)
     .order('created_at', { ascending: false })
+
+  const { data: metrics } = await supabase
+    .from('project_metrics')
+    .select('*')
+    .eq('project_id', projectId)
+    .order('period_date', { ascending: true })
 
   return (
     <div className="p-8 max-w-2xl">
@@ -186,7 +195,7 @@ export default async function ProjectDetailPage({
           </div>
         </div>
 
-                <div>
+        <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Features for this project</label>
           <div className="flex gap-4 text-sm">
             <label className="flex items-center gap-2">
@@ -200,6 +209,10 @@ export default async function ProjectDetailPage({
             <label className="flex items-center gap-2">
               <input type="checkbox" name="show_domain_ssl" defaultChecked={project.show_domain_ssl} />
               Show Domain &amp; SSL
+            </label>
+            <label className="flex items-center gap-2">
+              <input type="checkbox" name="show_metrics" defaultChecked={project.show_metrics} />
+              Show Performance
             </label>
           </div>
           <p className="mt-1 text-xs text-gray-400">
@@ -273,7 +286,7 @@ export default async function ProjectDetailPage({
 
             {project.show_changelog && (
         <>
-          <h2 className="mb-3 mt-8 font-semibold">Changelog</h2>
+      <h2 className="mb-3 mt-8 font-semibold">Changelog</h2>
       <form action={addChangelogEntry} className="mb-4 flex gap-2 rounded border p-4">
         <input type="hidden" name="project_id" value={project.id} />
         <input
@@ -333,6 +346,37 @@ export default async function ProjectDetailPage({
 
       {updates?.length === 0 && <p className="text-gray-500">No updates yet.</p>}
       </>
+      )}
+
+      {project.show_metrics && (
+        <div className="mb-8 rounded border p-4">
+          <h2 className="mb-3 font-semibold">Performance</h2>
+          <MetricForm projectId={project.id} />
+
+          <div className="mt-4">
+            <MetricsSection metrics={metrics || []} />
+          </div>
+
+          {metrics && metrics.length > 0 && (
+            <details className="mt-4 text-sm">
+              <summary className="cursor-pointer text-gray-500">All entries ({metrics.length})</summary>
+              <div className="mt-2 space-y-1">
+                {[...metrics].reverse().map((m) => (
+                  <div key={m.id} className="flex items-center justify-between rounded border px-3 py-1.5">
+                    <span>{m.period_date} • {m.metric_name}: {m.value}</span>
+                    <ConfirmSubmitButton
+                      action={deleteMetric}
+                      hiddenFields={{ id: m.id, project_id: project.id }}
+                      buttonLabel="Delete"
+                      confirmTitle="Delete this entry?"
+                      confirmMessage="This removes this one figure from the charts."
+                    />
+                  </div>
+                ))}
+              </div>
+            </details>
+          )}
+        </div>
       )}
 
       <div className="mb-8 rounded border p-4">

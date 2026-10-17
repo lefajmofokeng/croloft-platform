@@ -8,6 +8,7 @@ import ExpiryBadge from '@/components/expiry-badge'
 import QuotePricingTable from '@/components/quote-pricing-table'
 import SecretField from '@/components/secret-field'
 import { credentialTypeLabel, credentialEnvironmentLabel } from '@/lib/credential-options'
+import MetricsSection from '@/components/metrics-section'
 
 type LineItem = { label: string; price: number; recurring?: boolean }
 type HourlyItem = { label: string; rate: number; unit: string }
@@ -72,6 +73,14 @@ export default async function PortalProjectDetailPage({
     .select('*')
     .eq('project_id', projectId)
     .order('created_at', { ascending: false })  
+  
+  const { data: metrics } = project.show_metrics
+    ? await supabase
+        .from('project_metrics')
+        .select('*')
+        .eq('project_id', projectId)
+        .order('period_date', { ascending: true })
+    : { data: null }
 
   return (
     <div className="p-8 max-w-2xl">
@@ -212,6 +221,13 @@ export default async function PortalProjectDetailPage({
         showChangelog={project.show_changelog}
         documents={(documents || []).map((d) => ({ name: d.name, description: d.description }))}
       />
+
+      {project.show_metrics && (
+        <div className="mb-8 rounded border p-4">
+          <h2 className="mb-3 font-semibold">Performance</h2>
+          <MetricsSection metrics={metrics || []} />
+        </div>
+      )}
 
       {projectCredentials && projectCredentials.length > 0 && (
         <div className="mb-8 rounded border p-4">

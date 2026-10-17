@@ -1,7 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { getCredentialSecret } from '@/lib/credential-actions'
+import { getCredentialSecret, unlockCredentials } from '@/lib/credential-actions'
+
+type Pending = 'reveal' | 'copy' | null
 
 export default function SecretField({
   credentialId,
@@ -16,6 +18,8 @@ export default function SecretField({
   const [loading, setLoading] = useState(false)
   const [copied, setCopied] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [pending, setPending] = useState<Pending>(null)
+  const [password, setPassword] = useState('')
 
   // Hide it again automatically after 30 seconds
   useEffect(() => {
@@ -24,32 +28,27 @@ export default function SecretField({
     return () => clearTimeout(timer)
   }, [value])
 
-  async function handleReveal() {
-    if (value !== null) {
-      setValue(null)
-      return
-    }
-
+  async function perform(action: 'reveal' | 'copy') {
     setLoading(true)
     setError(null)
-    const result = await getCredentialSecret(credentialId, field, 'reveal')
+    const result = await getCredentialSecret(credentialId, field, action)
     setLoading(false)
+
+    // Clients are asked to confirm their password first
+    if (result.error === 'password_required') {
+      setPending(action)
+      return
+    }
 
     if (result.error || result.value === undefined) {
       setError(result.error || 'Something went wrong')
       return
     }
-    setValue(result.value)
-  }
 
-  async function handleCopy() {
-    setLoading(true)
-    setError(null)
-    const result = await getCredentialSecret(credentialId, field, 'copy')
-    setLoading(false)
+    setPending(null)
 
-    if (result.error || result.value === undefined) {
-      setError(result.error || 'Something went wrong')
+    if (action === 'reveal') {
+      setValue(result.value)
       return
     }
 
@@ -58,8 +57,44 @@ export default function SecretField({
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch {
-      setError('Could not copy. Your browser may be blocking clipboard access.')
+      setError('Could not copy. Click Copy again, or check that your browser allows clipboard access.')
     }
+  }
+
+  function handleReveal() {
+    if (value !== null) {
+      setValue(null)
+      return
+    }
+    perform('reveal')
+  }
+
+  async function handleUnlock(e: React.FormEvent) {
+    e.preventDefault()
+    if (!pending) return
+
+    setLoading(true)
+    setError(null)
+    const result = await unlockCredentials(password)
+    setLoading(false)
+    setPassword('')
+
+    if (result.error === 'no_password') {
+      setPending(null)
+      setError(
+        'Your account was created with Google, so it has no password yet. Use "Forgot password" on the login page to set one, then come back here.'
+      )
+      return
+    }
+
+    if (result.error || !result.ok) {
+      setError(result.error || 'Could not unlock')
+      return
+    }
+
+    const action = pending
+    setPending(null)
+    await perform(action)
   }
 
   return (
@@ -79,13 +114,50 @@ export default function SecretField({
         </button>
         <button
           type="button"
-          onClick={handleCopy}
+          onClick={() => perform('copy')}
           disabled={loading}
           className="rounded border px-2 py-0.5 text-xs text-blue-600 hover:bg-blue-50 disabled:opacity-50"
         >
           {copied ? 'Copied' : 'Copy'}
         </button>
       </div>
+
+      {pending && (
+        <form onSubmit={handleUnlock} className="mt-2 rounded border bg-amber-50 p-2">
+          <p className="mb-1 text-xs text-amber-800">
+            For your security, please confirm your account password. It stays unlocked for 5 minutes.
+          </p>
+          <div className="flex gap-2">
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              autoComplete="current-password"
+              placeholder="Your account password"
+              className="flex-1 rounded border border-gray-300 p-1 text-xs"
+            />
+            <button
+              type="submit"
+              disabled={loading}
+              className="rounded bg-blue-600 px-2 py-1 text-xs text-white disabled:opacity-50"
+            >
+              Unlock
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setPending(null)
+                setPassword('')
+                setError(null)
+              }}
+              className="rounded border px-2 py-1 text-xs text-gray-600"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
 
       {field === 'notes' && value !== null && (
         <pre className="mt-1 whitespace-pre-wrap rounded border bg-gray-50 p-2 font-mono text-xs text-gray-700">{value}</pre>

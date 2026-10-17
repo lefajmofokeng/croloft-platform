@@ -13,6 +13,8 @@ const ACTION_LABELS: Record<string, string> = {
   share_on: 'Switched sharing ON',
   share_off: 'Switched sharing OFF',
   deleted: 'Deleted credential',
+  unlock_ok: 'Entered password to unlock credentials',
+  unlock_failed: 'Wrong password when unlocking',
 }
 
 export default async function CredentialLogPage() {

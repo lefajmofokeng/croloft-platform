@@ -1,7 +1,15 @@
-type LineItem = { label: string; price: number; recurring?: boolean }
-type HourlyItem = { label: string; rate: number; unit: string }
+type LineItem = { service?: string; description?: string; label: string; price: number; recurring?: boolean }
+type HourlyItem = { service?: string; label: string; rate: number; unit: string }
 
 const money = (n: number) => `R${Number(n).toFixed(2)}`
+
+function serviceOf(item: { service?: string; label: string }) {
+  return item.service || item.label
+}
+function descriptionOf(item: { service?: string; description?: string; label: string }) {
+  if (item.description !== undefined) return item.description
+  return item.service ? '' : item.label
+}
 
 export default function QuotePricingTable({
   lineItems,
@@ -25,6 +33,7 @@ export default function QuotePricingTable({
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b text-left text-xs uppercase tracking-wide text-gray-400">
+              <th className="pb-2 font-medium">Service</th>
               <th className="pb-2 font-medium">Description</th>
               <th className="pb-2 text-right font-medium">Once-off</th>
               <th className="pb-2 text-right font-medium">Monthly</th>
@@ -34,7 +43,8 @@ export default function QuotePricingTable({
           <tbody>
             {onceOffRows.map((item, i) => (
               <tr key={`o${i}`} className="border-b text-gray-600">
-                <td className="py-2 pr-2">{item.label}</td>
+                <td className="py-2 pr-2">{serviceOf(item)}</td>
+                <td className="py-2 pr-2 text-gray-500">{descriptionOf(item)}</td>
                 <td className="py-2 text-right">{money(item.price)}</td>
                 <td className="py-2 text-right">—</td>
                 <td className="py-2 text-right">—</td>
@@ -42,7 +52,8 @@ export default function QuotePricingTable({
             ))}
             {monthlyRows.map((item, i) => (
               <tr key={`m${i}`} className="border-b text-gray-600">
-                <td className="py-2 pr-2">{item.label}</td>
+                <td className="py-2 pr-2">{serviceOf(item)}</td>
+                <td className="py-2 pr-2 text-gray-500">{descriptionOf(item)}</td>
                 <td className="py-2 text-right">—</td>
                 <td className="py-2 text-right">{money(item.price)}</td>
                 <td className="py-2 text-right">—</td>
@@ -50,7 +61,8 @@ export default function QuotePricingTable({
             ))}
             {hourlyItems.map((item, i) => (
               <tr key={`h${i}`} className="border-b text-gray-600">
-                <td className="py-2 pr-2">{item.label} ({item.unit})</td>
+                <td className="py-2 pr-2">{serviceOf(item)}</td>
+                <td className="py-2 pr-2 text-gray-500">{item.unit}</td>
                 <td className="py-2 text-right">—</td>
                 <td className="py-2 text-right">—</td>
                 <td className="py-2 text-right">{money(item.rate)}/hr</td>
@@ -59,7 +71,7 @@ export default function QuotePricingTable({
           </tbody>
           <tfoot>
             <tr className="font-semibold">
-              <td className="pt-3">Totals</td>
+              <td className="pt-3" colSpan={2}>Totals</td>
               <td className="pt-3 text-right">{money(onceOffSum)}</td>
               <td className="pt-3 text-right">{money(monthlySum)}</td>
               <td className="pt-3 text-right">{hourlyItems.length > 0 ? 'as worked' : '—'}</td>

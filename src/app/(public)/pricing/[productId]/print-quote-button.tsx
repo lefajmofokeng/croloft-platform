@@ -3,9 +3,16 @@
 import { useState, useEffect } from 'react'
 import { saveQuote, getCurrentClientProfile, loginForQuote } from '../actions'
 
-type LineItem = { label: string; price: number; recurring?: boolean }
-type HourlyItem = { label: string; rate: number; unit: string }
+type LineItem = { service?: string; description?: string; label: string; price: number; recurring?: boolean }
+type HourlyItem = { service?: string; label: string; rate: number; unit: string }
 
+function serviceOf(item: { service?: string; label: string }) {
+  return item.service || item.label
+}
+function descriptionOf(item: { service?: string; description?: string; label: string }) {
+  if (item.description !== undefined) return item.description
+  return item.service ? '' : item.label
+}
 export default function PrintQuoteButton({
   productId,
   productName,
@@ -51,16 +58,18 @@ export default function PrintQuoteButton({
   function generatePdf(quoteRef: string, clientName: string, clientEmail: string) {
     const dateStr = new Date().toLocaleDateString('en-ZA', { year: 'numeric', month: 'long', day: 'numeric' })
 
-    const money = (n: number) => `R${n.toFixed(2)}`
+        const money = (n: number) => `R${n.toFixed(2)}`
     const cell = 'padding:8px 6px;border-bottom:1px solid #eee;text-align:right;'
     const th = 'padding:6px;border-bottom:2px solid #333;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:#888;text-align:right;'
     const labelCell = 'padding:8px 6px 8px 0;border-bottom:1px solid #eee;'
+    const descCell = 'padding:8px 6px;border-bottom:1px solid #eee;color:#777;'
 
     const onceOffRows = lineItems
       .filter((i) => !i.recurring)
       .map((item) => `
         <tr>
-          <td style="${labelCell}">${item.label}</td>
+          <td style="${labelCell}">${serviceOf(item)}</td>
+          <td style="${descCell}">${descriptionOf(item)}</td>
           <td style="${cell}">${money(item.price)}</td>
           <td style="${cell}">—</td>
           <td style="${cell}">—</td>
@@ -70,7 +79,8 @@ export default function PrintQuoteButton({
       .filter((i) => i.recurring)
       .map((item) => `
         <tr>
-          <td style="${labelCell}">${item.label}</td>
+          <td style="${labelCell}">${serviceOf(item)}</td>
+          <td style="${descCell}">${descriptionOf(item)}</td>
           <td style="${cell}">—</td>
           <td style="${cell}">${money(item.price)}</td>
           <td style="${cell}">—</td>
@@ -78,7 +88,8 @@ export default function PrintQuoteButton({
 
     const hourlyRows = hourlyItems.map((item) => `
         <tr>
-          <td style="${labelCell}">${item.label} (${item.unit})</td>
+          <td style="${labelCell}">${serviceOf(item)}</td>
+          <td style="${descCell}">${item.unit}</td>
           <td style="${cell}">—</td>
           <td style="${cell}">—</td>
           <td style="${cell}">${money(item.rate)}/hr</td>
@@ -150,10 +161,11 @@ export default function PrintQuoteButton({
             </div>
           </div>
 
-          <table>
+                    <table>
             <thead>
               <tr>
-                <th style="${th}text-align:left;padding-left:0;">Description</th>
+                <th style="${th}text-align:left;padding-left:0;">Service</th>
+                <th style="${th}text-align:left;">Description</th>
                 <th style="${th}">Once-off</th>
                 <th style="${th}">Monthly</th>
                 <th style="${th}">Hourly</th>
@@ -162,7 +174,7 @@ export default function PrintQuoteButton({
             <tbody>${rowsHtml}</tbody>
             <tfoot>
               <tr>
-                <td style="padding:10px 6px 4px 0;font-weight:bold;">Totals</td>
+                <td style="padding:10px 6px 4px 0;font-weight:bold;" colspan="2">Totals</td>
                 <td style="padding:10px 6px 4px;text-align:right;font-weight:bold;">${money(onceOffTotal)}</td>
                 <td style="padding:10px 6px 4px;text-align:right;font-weight:bold;">${money(monthlyTotal)}</td>
                 <td style="padding:10px 6px 4px;text-align:right;font-weight:bold;">${hasHourly ? 'as worked' : '—'}</td>

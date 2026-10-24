@@ -5,8 +5,16 @@ import { useRouter } from 'next/navigation'
 import { updateInvoiceDetails } from './actions'
 
 type Cycle = 'once_off' | 'monthly' | 'hourly'
-type LineItem = { label: string; price: number; cycle?: Cycle; rate?: number }
-type Row = { label: string; price: number; cycle: Cycle; rate: number }
+type LineItem = { service?: string; description?: string; label: string; price: number; cycle?: Cycle; rate?: number }
+type Row = { service: string; description: string; price: number; cycle: Cycle; rate: number }
+
+function serviceOf(item: { service?: string; label: string }) {
+  return item.service || item.label
+}
+function descriptionOf(item: { service?: string; description?: string; label: string }) {
+  if (item.description !== undefined) return item.description
+  return item.service ? '' : item.label
+}
 
 export default function InvoiceLineItemsEditor({
   invoiceId,
@@ -24,6 +32,8 @@ export default function InvoiceLineItemsEditor({
   const [dueDate, setDueDate] = useState(initialDueDate || '')
   const [items, setItems] = useState<Row[]>(
     initialLineItems.map((item) => ({
+      service: serviceOf(item),
+      description: descriptionOf(item),
       label: item.label,
       price: item.price,
       cycle: item.cycle || 'once_off',
@@ -48,7 +58,7 @@ export default function InvoiceLineItemsEditor({
   }
 
   function addRow() {
-    setItems((prev) => [...prev, { label: '', price: 0, cycle: 'once_off', rate: 0 }])
+    setItems((prev) => [...prev, { service: '', description: '', price: 0, cycle: 'once_off', rate: 0 }])
   }
 
   function removeRow(index: number) {
@@ -60,9 +70,11 @@ export default function InvoiceLineItemsEditor({
     setError(null)
 
     const cleanedItems = items
-      .filter((item) => item.label.trim().length > 0)
+      .filter((item) => item.service.trim().length > 0)
       .map((item) => ({
-        label: item.label.trim(),
+        service: item.service.trim(),
+        description: item.description.trim(),
+        label: item.service.trim(),
         price: item.price,
         cycle: item.cycle,
         ...(item.cycle === 'hourly' ? { rate: item.rate } : {}),
@@ -111,27 +123,35 @@ export default function InvoiceLineItemsEditor({
         <label className="mb-2 block text-sm font-medium text-gray-700">Line Items</label>
 
         <div className="mb-1 grid grid-cols-12 gap-2 text-xs text-gray-400">
-          <span className="col-span-4">Description</span>
-          <span className="col-span-2">Type</span>
+          <span className="col-span-3">Service</span>
+          <span className="col-span-3">Description</span>
+          <span className="col-span-1">Type</span>
           <span className="col-span-2">Amount (R)</span>
-          <span className="col-span-2">Rate (R/hr)</span>
+          <span className="col-span-1">Rate (R/hr)</span>
           <span className="col-span-2"></span>
         </div>
 
         <div className="space-y-2">
           {items.map((item, i) => (
-            <div key={i} className="grid grid-cols-12 gap-2">
+                        <div key={i} className="grid grid-cols-12 gap-2">
               <input
                 type="text"
-                value={item.label}
-                onChange={(e) => updateItem(i, 'label', e.target.value)}
+                value={item.service}
+                onChange={(e) => updateItem(i, 'service', e.target.value)}
+                placeholder="Service"
+                className="col-span-3 rounded border border-gray-300 p-2 text-sm"
+              />
+              <input
+                type="text"
+                value={item.description}
+                onChange={(e) => updateItem(i, 'description', e.target.value)}
                 placeholder="Description"
-                className="col-span-4 rounded border border-gray-300 p-2 text-sm"
+                className="col-span-3 rounded border border-gray-300 p-2 text-sm"
               />
               <select
                 value={item.cycle}
                 onChange={(e) => updateItem(i, 'cycle', e.target.value)}
-                className="col-span-2 rounded border border-gray-300 p-2 text-sm"
+                className="col-span-1 rounded border border-gray-300 p-2 text-sm"
               >
                 <option value="once_off">Once-off</option>
                 <option value="monthly">Monthly</option>
@@ -151,7 +171,7 @@ export default function InvoiceLineItemsEditor({
                 onChange={(e) => updateItem(i, 'rate', e.target.value)}
                 disabled={item.cycle !== 'hourly'}
                 placeholder={item.cycle === 'hourly' ? 'R/hr' : '—'}
-                className="col-span-2 rounded border border-gray-300 p-2 text-sm disabled:bg-gray-100"
+                className="col-span-1 rounded border border-gray-300 p-2 text-sm disabled:bg-gray-100"
               />
               <button
                 type="button"

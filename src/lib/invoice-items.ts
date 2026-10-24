@@ -1,8 +1,10 @@
-type QuoteLineItem = { label: string; price: number; recurring?: boolean }
-type QuoteHourlyItem = { label: string; rate: number; unit: string }
+type QuoteLineItem = { service?: string; description?: string; label: string; price: number; recurring?: boolean }
+type QuoteHourlyItem = { service?: string; label: string; rate: number; unit: string }
 
 export type InvoiceCycle = 'once_off' | 'monthly' | 'hourly'
 export type InvoiceItem = {
+  service?: string
+  description?: string
   label: string
   price: number
   cycle: InvoiceCycle
@@ -18,6 +20,8 @@ export function buildInvoiceItems(
 
   for (const item of lineItems) {
     items.push({
+      service: item.service,
+      description: item.description,
       label: item.label,
       price: item.price,
       cycle: item.recurring ? 'monthly' : 'once_off',
@@ -26,6 +30,8 @@ export function buildInvoiceItems(
 
   for (const item of hourlyItems) {
     items.push({
+      service: item.service || item.label,
+      description: item.unit,
       label: `${item.label} (${item.unit})`,
       price: 0,
       cycle: 'hourly',

@@ -4,10 +4,20 @@ import PrintInvoiceButton from './print-invoice-button'
 import { summarizeInvoice } from '@/lib/invoice-items'
 
 type LineItem = {
+  service?: string
+  description?: string
   label: string
   price: number
   cycle?: 'once_off' | 'monthly' | 'hourly'
   rate?: number
+}
+
+function serviceOf(item: { service?: string; label: string }) {
+  return item.service || item.label
+}
+function descriptionOf(item: { service?: string; description?: string; label: string }) {
+  if (item.description !== undefined) return item.description
+  return item.service ? '' : item.label
 }
 
 const statusColors: Record<string, string> = {
@@ -63,6 +73,7 @@ export default async function PortalInvoiceDetailPage({
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b text-left text-xs uppercase tracking-wide text-gray-400">
+              <th className="pb-2 font-medium">Service</th>
               <th className="pb-2 font-medium">Description</th>
               <th className="pb-2 text-right font-medium">Once-off</th>
               <th className="pb-2 text-right font-medium">Monthly</th>
@@ -74,7 +85,7 @@ export default async function PortalInvoiceDetailPage({
               const cycle = item.cycle || 'once_off'
               return (
                 <tr key={i} className="border-b text-gray-600">
-                  <td className="py-2 pr-2">{item.label}</td>
+                  <td className="py-2 pr-2">{serviceOf(item)}</td>
                   <td className="py-2 text-right">
                     {cycle === 'once_off' ? `R${item.price.toFixed(2)}` : '—'}
                   </td>
@@ -102,7 +113,7 @@ export default async function PortalInvoiceDetailPage({
           </tbody>
           <tfoot>
             <tr className="font-semibold">
-              <td className="pt-3">Subtotals</td>
+              <td className="pt-3" colSpan={2}>Subtotals</td>
               <td className="pt-3 text-right">R{sums.onceOff.toFixed(2)}</td>
               <td className="pt-3 text-right">R{sums.monthly.toFixed(2)}</td>
               <td className="pt-3 text-right">

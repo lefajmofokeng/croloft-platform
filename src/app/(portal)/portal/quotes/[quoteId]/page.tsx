@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import { acceptQuote } from '../actions'
 import QuotePricingTable from '@/components/quote-pricing-table'
+import PrintExistingQuoteButton from '@/components/print-existing-quote-button'
 
 type LineItem = { label: string; price: number; recurring?: boolean }
 
@@ -57,6 +58,17 @@ export default async function PortalQuoteDetailPage({
           </button>
         </form>
       )}
+
+      <PrintExistingQuoteButton
+        quoteRef={quote.quote_ref}
+        productName={quote.product_name}
+        clientName={quote.client_name}
+        clientEmail={quote.client_email}
+        lineItems={lineItems}
+        hourlyItems={(quote.hourly_items || []) as { service?: string; label: string; rate: number; unit: string }[]}
+        onceOffTotal={quote.once_off_total}
+        monthlyTotal={quote.monthly_total}
+      />
     </div>
   )
 }

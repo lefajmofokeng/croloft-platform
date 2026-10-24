@@ -58,37 +58,37 @@ export default function PricingCalculator({ product }: { product: Product }) {
     return initial
   })
 
-  const { onceOffTotal, monthlyTotal, hourlyItems, lineItems } = useMemo(() => {
-    const items: { label: string; price: number; recurring?: boolean }[] = []
-    const hourly: { label: string; rate: number; unit: string }[] = []
+ const { onceOffTotal, monthlyTotal, hourlyItems, lineItems } = useMemo(() => {
+    const items: { service: string; description: string; label: string; price: number; recurring?: boolean }[] = []
+    const hourly: { service: string; label: string; rate: number; unit: string }[] = []
 
     for (const addon of product.pricing_addons) {
       const cycle = addon.billing_cycle
 
       if (addon.type === 'included') {
         if (cycle === 'hourly') {
-          hourly.push({ label: addon.name, rate: Number(addon.unit_price || 0), unit: addon.unit_label || 'hour' })
+          hourly.push({ service: addon.name, label: addon.name, rate: Number(addon.unit_price || 0), unit: addon.unit_label || 'hour' })
         } else {
-          items.push({ label: addon.name, price: Number(addon.unit_price || 0), recurring: cycle === 'monthly' })
+          items.push({ service: addon.name, description: 'Included', label: addon.name, price: Number(addon.unit_price || 0), recurring: cycle === 'monthly' })
         }
       } else if (addon.type === 'dropdown') {
         const option = addon.pricing_addon_options.find((o) => o.id === dropdownSelections[addon.id])
         if (option) {
           if (cycle === 'hourly') {
-            hourly.push({ label: `${addon.name}: ${option.label}`, rate: Number(option.price), unit: addon.unit_label || 'hour' })
+            hourly.push({ service: addon.name, label: `${addon.name}: ${option.label}`, rate: Number(option.price), unit: addon.unit_label || 'hour' })
           } else {
-            items.push({ label: `${addon.name}: ${option.label}`, price: Number(option.price), recurring: cycle === 'monthly' })
+            items.push({ service: addon.name, description: option.label, label: `${addon.name}: ${option.label}`, price: Number(option.price), recurring: cycle === 'monthly' })
           }
         }
       } else if (addon.type === 'numeric') {
         const qty = numericQuantities[addon.id] ?? addon.included_quantity
         const extraUnits = Math.max(0, qty - addon.included_quantity)
         if (cycle === 'hourly') {
-          if (qty > 0) {
-            hourly.push({ label: addon.name, rate: Number(addon.unit_price || 0) * qty, unit: `${qty} ${addon.unit_label || 'hour'}(s)` })
-          }
+          if (qty > 0) hourly.push({ service: addon.name, label: addon.name, rate: Number(addon.unit_price || 0) * qty, unit: `${qty} ${addon.unit_label || 'hour'}(s)` })
         } else if (extraUnits > 0) {
           items.push({
+            service: addon.name,
+            description: `${extraUnits} extra ${addon.unit_label}(s)`,
             label: `${addon.name} (${extraUnits} extra ${addon.unit_label}(s))`,
             price: extraUnits * Number(addon.unit_price || 0),
             recurring: cycle === 'monthly',
@@ -96,7 +96,6 @@ export default function PricingCalculator({ product }: { product: Product }) {
         }
       }
     }
-
     const onceOff = items.filter((i) => !i.recurring).reduce((sum, i) => sum + i.price, 0)
     const monthly = items.filter((i) => i.recurring).reduce((sum, i) => sum + i.price, 0)
     return { onceOffTotal: onceOff, monthlyTotal: monthly, hourlyItems: hourly, lineItems: items }

@@ -76,6 +76,8 @@ export async function deleteInvoice(formData: FormData): Promise<void> {
 }
 
 type InvoiceLineItem = {
+  service?: string
+  description?: string
   label: string
   price: number
   cycle?: 'once_off' | 'monthly' | 'hourly'

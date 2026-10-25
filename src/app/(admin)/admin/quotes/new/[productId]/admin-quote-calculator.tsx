@@ -13,6 +13,8 @@ type Addon = {
   unit_price: number | null
   unit_label: string | null
   included_quantity: number
+  input_style: 'number' | 'slider'
+  max_quantity: number | null
   group_name: string | null
   pricing_addon_options: AddonOption[]
 }
@@ -167,7 +169,7 @@ export default function AdminQuoteCalculator({
     setGenerating(true)
     setError(null)
 
-        const result = await adminCreateQuote({
+    const result = await adminCreateQuote({
       clientId,
       guestName,
       guestEmail,
@@ -226,27 +228,58 @@ export default function AdminQuoteCalculator({
                     </div>
                   )
                 }
-                return (
-                  <div key={addon.id} className="rounded border p-4">
-                    <label className="mb-2 block font-medium">{addon.name}</label>
-                    <div className="flex items-center gap-2">
+                          {
+            const currentValue = numericQuantities[addon.id] ?? addon.included_quantity
+            const max = addon.max_quantity ?? Math.max(currentValue, addon.included_quantity + 10)
+            const range = Math.max(1, max - addon.included_quantity)
+            const percent = ((currentValue - addon.included_quantity) / range) * 100
+
+            return (
+              <div key={addon.id} className="rounded border p-4">
+                <label className="mb-2 block font-medium">{addon.name}</label>
+
+                {addon.input_style === 'slider' ? (
+                  <div className="pt-6">
+                    <div className="relative mb-1">
+                      <span
+                        className="absolute -top-6 -translate-x-1/2 rounded bg-green-600 px-2 py-0.5 text-xs font-medium text-white"
+                        style={{ left: `${percent}%` }}
+                      >
+                        {currentValue} {addon.unit_label}{currentValue === 1 ? '' : '(s)'}
+                      </span>
                       <input
-                        type="number"
+                        type="range"
                         min={addon.included_quantity}
-                        className="w-24 rounded border border-gray-300 p-2"
-                        value={numericQuantities[addon.id] ?? addon.included_quantity}
-                        onChange={(e) => setNumericQuantities((prev) => ({
-                          ...prev,
-                          [addon.id]: Math.max(addon.included_quantity, parseInt(e.target.value) || addon.included_quantity),
-                        }))}
+                        max={max}
+                        value={currentValue}
+                        onChange={(e) => setNumericQuantities((prev) => ({ ...prev, [addon.id]: parseInt(e.target.value) }))}
+                        className="w-full accent-green-600"
                       />
-                      <span className="text-sm text-gray-500">{addon.unit_label}(s) — R{addon.unit_price} each</span>
                     </div>
-                    {addon.included_quantity > 0 && (
-                      <p className="mt-1 text-xs text-gray-400">{addon.included_quantity} included — additional billed extra</p>
-                    )}
+                    <p className="text-xs text-gray-500">R{addon.unit_price} each</p>
                   </div>
-                )
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min={addon.included_quantity}
+                      className="w-24 rounded border border-gray-300 p-2"
+                      value={currentValue}
+                      onChange={(e) => setNumericQuantities((prev) => ({
+                        ...prev,
+                        [addon.id]: Math.max(addon.included_quantity, parseInt(e.target.value) || addon.included_quantity),
+                      }))}
+                    />
+                    <span className="text-sm text-gray-500">{addon.unit_label}(s) — R{addon.unit_price} each</span>
+                  </div>
+                )}
+
+                {addon.included_quantity > 0 && (
+                  <p className="mt-1 text-xs text-gray-400">{addon.included_quantity} included — additional billed extra</p>
+                )}
+              </div>
+            )
+          }
               })}
             </div>
           </div>

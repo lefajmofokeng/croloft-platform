@@ -6,6 +6,9 @@ import { INVOICE_SOURCES } from '@/lib/invoice-source'
 
 type Client = { id: string; full_name: string | null; email: string | null }
 type Project = { id: string; name: string; client_id: string }
+type Row = { service: string; description: string; cycle: 'once_off' | 'monthly' | 'hourly'; price: string; rate: string }
+
+const emptyRow: Row = { service: '', description: '', cycle: 'once_off', price: '', rate: '' }
 
 export default function InvoiceForm({
   clients,
@@ -16,8 +19,22 @@ export default function InvoiceForm({
 }) {
   const [mode, setMode] = useState<'existing' | 'guest'>('existing')
   const [selectedClientId, setSelectedClientId] = useState('')
+  const [rows, setRows] = useState<Row[]>([{ ...emptyRow }, { ...emptyRow }, { ...emptyRow }])
 
   const filteredProjects = projects.filter((p) => p.client_id === selectedClientId)
+  const input = 'rounded border border-gray-300 p-2 text-sm'
+
+  function updateRow(i: number, field: keyof Row, value: string) {
+    setRows((prev) => prev.map((row, idx) => (idx === i ? { ...row, [field]: value } : row)))
+  }
+
+  function addRow() {
+    setRows((prev) => [...prev, { ...emptyRow }])
+  }
+
+  function removeRow(i: number) {
+    setRows((prev) => prev.filter((_, idx) => idx !== i))
+  }
 
   return (
     <form action={createInvoice} className="space-y-4 rounded border p-4">
@@ -112,15 +129,79 @@ export default function InvoiceForm({
 
       <div>
         <label className="mb-2 block text-sm font-medium text-gray-700">Line Items</label>
+
+        <div className="mb-1 grid grid-cols-12 gap-2 text-xs text-gray-400">
+          <span className="col-span-3">Service</span>
+          <span className="col-span-3">Description</span>
+          <span className="col-span-1">Type</span>
+          <span className="col-span-2">Amount (R)</span>
+          <span className="col-span-1">Rate (R/hr)</span>
+          <span className="col-span-2"></span>
+        </div>
+
         <div className="space-y-2">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className="flex gap-2">
-              <input type="text" name="item_label" placeholder="Description" className="flex-1 rounded border border-gray-300 p-2 text-sm" />
-              <input type="number" name="item_price" step="0.01" placeholder="R Amount" className="w-32 rounded border border-gray-300 p-2 text-sm" />
+          {rows.map((row, i) => (
+            <div key={i} className="grid grid-cols-12 gap-2">
+              <input
+                type="text"
+                name="item_service"
+                value={row.service}
+                onChange={(e) => updateRow(i, 'service', e.target.value)}
+                placeholder="Service"
+                className={`col-span-3 ${input}`}
+              />
+              <input
+                type="text"
+                name="item_description"
+                value={row.description}
+                onChange={(e) => updateRow(i, 'description', e.target.value)}
+                placeholder="Description"
+                className={`col-span-3 ${input}`}
+              />
+              <select
+                name="item_cycle"
+                value={row.cycle}
+                onChange={(e) => updateRow(i, 'cycle', e.target.value)}
+                className={`col-span-1 ${input}`}
+              >
+                <option value="once_off">Once-off</option>
+                <option value="monthly">Monthly</option>
+                <option value="hourly">Hourly</option>
+              </select>
+              <input
+                type="number"
+                step="0.01"
+                name="item_price"
+                value={row.price}
+                onChange={(e) => updateRow(i, 'price', e.target.value)}
+                placeholder="R Amount"
+                className={`col-span-2 ${input}`}
+              />
+              <input
+                type="number"
+                step="0.01"
+                name="item_rate"
+                value={row.rate}
+                onChange={(e) => updateRow(i, 'rate', e.target.value)}
+                disabled={row.cycle !== 'hourly'}
+                placeholder={row.cycle === 'hourly' ? 'R/hr' : '—'}
+                className={`col-span-1 ${input} disabled:bg-gray-100`}
+              />
+              <button
+                type="button"
+                onClick={() => removeRow(i)}
+                className="col-span-2 rounded border border-red-300 px-2 text-sm text-red-600 hover:bg-red-50"
+              >
+                Remove
+              </button>
             </div>
           ))}
         </div>
-        <p className="mt-1 text-xs text-gray-400">Leave a row blank to skip it.</p>
+
+        <button type="button" onClick={addRow} className="mt-2 text-sm text-blue-600 hover:underline">
+          + Add line item
+        </button>
+        <p className="mt-1 text-xs text-gray-400">Leave a row&apos;s Service blank to skip it.</p>
       </div>
 
       <button type="submit" className="rounded bg-blue-600 px-4 py-2 text-white">

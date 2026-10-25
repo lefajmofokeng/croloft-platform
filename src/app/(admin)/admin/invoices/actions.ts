@@ -18,15 +18,31 @@ export async function createInvoice(formData: FormData): Promise<void> {
   const title = formData.get('title') as string
   const due_date = formData.get('due_date') as string
   const source = (formData.get('source') as string) || 'other'
-  const labels = formData.getAll('item_label') as string[]
+  const services = formData.getAll('item_service') as string[]
+  const descriptions = formData.getAll('item_description') as string[]
+  const cycles = formData.getAll('item_cycle') as string[]
   const prices = formData.getAll('item_price') as string[]
+  const rates = formData.getAll('item_rate') as string[]
 
   if (!title?.trim()) return
   if (!client_id && !guest_name?.trim()) return
 
-  const line_items: LineItem[] = labels
-    .map((label, i) => ({ label: label.trim(), price: parseFloat(prices[i]) || 0 }))
-    .filter((item) => item.label.length > 0)
+  const line_items: LineItem[] = services
+    .map((service, i) => {
+      const cycle = (['once_off', 'monthly', 'hourly'].includes(cycles[i]) ? cycles[i] : 'once_off') as
+        | 'once_off'
+        | 'monthly'
+        | 'hourly'
+      return {
+        service: service.trim(),
+        description: (descriptions[i] || '').trim(),
+        label: service.trim(),
+        price: parseFloat(prices[i]) || 0,
+        cycle,
+        ...(cycle === 'hourly' ? { rate: parseFloat(rates[i]) || 0 } : {}),
+      }
+    })
+    .filter((item) => item.service.length > 0)
 
   if (line_items.length === 0) return
 

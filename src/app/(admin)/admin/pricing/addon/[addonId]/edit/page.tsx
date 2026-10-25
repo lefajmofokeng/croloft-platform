@@ -83,6 +83,21 @@ export default async function EditAddonPage({
           </label>
           <input type="number" name="included_quantity" defaultValue={addon.included_quantity} className="mt-1 w-full rounded border border-gray-300 p-2" />
         </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Input Style (only for Numeric)
+          </label>
+          <select name="input_style" defaultValue={addon.input_style || 'number'} className="mt-1 w-full rounded border border-gray-300 p-2">
+            <option value="number">Number box</option>
+            <option value="slider">Slider</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Max Value (only for Slider)
+          </label>
+          <input type="number" name="max_quantity" defaultValue={addon.max_quantity} className="mt-1 w-full rounded border border-gray-300 p-2" />
+        </div>
         <button type="submit" className="rounded bg-blue-600 px-4 py-2 text-white">
           Save Changes
         </button>

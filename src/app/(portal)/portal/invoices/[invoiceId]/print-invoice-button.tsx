@@ -3,10 +3,20 @@
 import { summarizeInvoice } from '@/lib/invoice-items'
 
 type LineItem = {
+  service?: string
+  description?: string
   label: string
   price: number
   cycle?: 'once_off' | 'monthly' | 'hourly'
   rate?: number
+}
+
+function serviceOf(item: { service?: string; label: string }) {
+  return item.service || item.label
+}
+function descriptionOf(item: { service?: string; description?: string; label: string }) {
+  if (item.description !== undefined) return item.description
+  return item.service ? '' : item.label
 }
 
 export default function PrintInvoiceButton({
@@ -37,6 +47,8 @@ export default function PrintInvoiceButton({
     const cell = 'padding:8px 6px;border-bottom:1px solid #eee;text-align:right;'
     const th = 'padding:6px;border-bottom:2px solid #333;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:#888;text-align:right;'
 
+    const descCell = 'padding:8px 6px;border-bottom:1px solid #eee;color:#777;'
+
     const itemsHtml = lineItems
       .map((item) => {
         const cycle = item.cycle || 'once_off'
@@ -51,7 +63,8 @@ export default function PrintInvoiceButton({
         }
         return `
         <tr>
-          <td style="padding:8px 6px 8px 0;border-bottom:1px solid #eee;">${item.label}</td>
+          <td style="padding:8px 6px 8px 0;border-bottom:1px solid #eee;">${serviceOf(item)}</td>
+          <td style="${descCell}">${descriptionOf(item)}</td>
           <td style="${cell}">${onceOff}</td>
           <td style="${cell}">${monthly}</td>
           <td style="${cell}">${hourly}</td>
@@ -129,6 +142,7 @@ export default function PrintInvoiceButton({
           <table>
             <thead>
               <tr>
+                <th style="${th}text-align:left;padding-left:0;">Service</th>
                 <th style="${th}text-align:left;padding-left:0;">Description</th>
                 <th style="${th}">Once-off</th>
                 <th style="${th}">Monthly</th>

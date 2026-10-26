@@ -98,6 +98,18 @@ export default async function EditAddonPage({
           </label>
           <input type="number" name="max_quantity" defaultValue={addon.max_quantity} className="mt-1 w-full rounded border border-gray-300 p-2" />
         </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Help Text (shown to clients via an info icon)
+          </label>
+          <textarea
+            name="help_text"
+            rows={2}
+            placeholder="Plain-English explanation of what this is, for clients who don't know the term"
+            defaultValue={addon.help_text || ''}
+            className="mt-1 w-full rounded border border-gray-300 p-2"
+          />
+        </div>
         <button type="submit" className="rounded bg-blue-600 px-4 py-2 text-white">
           Save Changes
         </button>

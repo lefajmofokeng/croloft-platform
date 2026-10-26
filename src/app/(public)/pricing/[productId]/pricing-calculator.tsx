@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import PrintQuoteButton from './print-quote-button'
+import AddonInfoIcon from '@/components/addon-info-icon'
 
 type AddonOption = { id: string; label: string; price: number; is_default: boolean }
 type Addon = {
@@ -14,6 +15,7 @@ type Addon = {
   included_quantity: number
   input_style: 'number' | 'slider'
   max_quantity: number | null
+  help_text: string | null
   group_name: string | null
   pricing_addon_options: AddonOption[]
 }
@@ -119,15 +121,21 @@ export default function PricingCalculator({ product }: { product: Product }) {
                 if (addon.type === 'included') {
                   return (
                     <div key={addon.id} className="flex items-center justify-between rounded border bg-gray-50 p-4">
-                      <span className="font-medium">{addon.name}</span>
+                    <span className="font-medium">
+                      {addon.name}
+                      {addon.help_text && <AddonInfoIcon text={addon.help_text} />}
+                    </span>
                       <span className="text-xs text-gray-400">Included</span>
                     </div>
                   )
                 }
                 if (addon.type === 'dropdown') {
                   return (
-                    <div key={addon.id} className="rounded border p-4">
-                      <label className="mb-2 block font-medium">{addon.name}</label>
+                  <div key={addon.id} className="rounded border p-4">
+                  <label className="mb-2 block font-medium">
+                    {addon.name}
+                    {addon.help_text && <AddonInfoIcon text={addon.help_text} />}
+                  </label>
                       <select
                         className="w-full rounded border border-gray-300 p-2"
                         value={dropdownSelections[addon.id] || ''}
@@ -150,7 +158,10 @@ export default function PricingCalculator({ product }: { product: Product }) {
 
             return (
               <div key={addon.id} className="rounded border p-4">
-                <label className="mb-2 block font-medium">{addon.name}</label>
+                  <label className="mb-2 block font-medium">
+                    {addon.name}
+                    {addon.help_text && <AddonInfoIcon text={addon.help_text} />}
+                  </label>
 
                 {addon.input_style === 'slider' ? (
                   <div className="pt-6">

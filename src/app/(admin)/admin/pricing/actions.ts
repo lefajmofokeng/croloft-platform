@@ -79,6 +79,7 @@ export async function createAddon(formData: FormData): Promise<void> {
   const included_quantity = formData.get('included_quantity') as string
   const input_style = (formData.get('input_style') as string) || 'number'
   const max_quantity = formData.get('max_quantity') as string
+  const help_text = formData.get('help_text') as string
   const group_name = formData.get('group_name') as string
 
   if (!name?.trim() || !product_id || !type) {
@@ -95,6 +96,7 @@ export async function createAddon(formData: FormData): Promise<void> {
     included_quantity: type === 'numeric' ? parseInt(included_quantity) || 0 : 0,
     input_style: input_style,
     max_quantity: max_quantity ? parseInt(max_quantity) || null : null,
+    help_text: help_text?.trim() || null,
     group_name: group_name?.trim() || null,
   })
 
@@ -215,6 +217,7 @@ export async function updateAddon(formData: FormData): Promise<void> {
   const included_quantity = formData.get('included_quantity') as string
   const input_style = (formData.get('input_style') as string) || 'number'
   const max_quantity = formData.get('max_quantity') as string
+  const help_text = formData.get('help_text') as string
   const group_name = formData.get('group_name') as string 
 
   if (!id || !name?.trim() || !type) {
@@ -232,6 +235,7 @@ export async function updateAddon(formData: FormData): Promise<void> {
       included_quantity: type === 'numeric' ? parseInt(included_quantity) || 0 : 0,
       input_style,
       max_quantity: max_quantity ? parseInt(max_quantity) || null : null,
+      help_text: help_text?.trim() || null,
       group_name: group_name?.trim() || null,
     })
     .eq('id', id)

@@ -10,6 +10,7 @@ import { credentialTypeLabel, credentialEnvironmentLabel } from '@/lib/credentia
 import MetricForm from '../metric-form'
 import MetricsSection from '@/components/metrics-section'
 import { deleteMetric } from '../metrics-actions'
+import { updateRequestStatus } from '../actions'
 
 type LineItem = { label: string; price: number; recurring?: boolean }
 type HourlyItem = { label: string; rate: number; unit: string }
@@ -85,6 +86,12 @@ export default async function ProjectDetailPage({
     .select('*')
     .eq('project_id', projectId)
     .order('period_date', { ascending: true })
+    
+  const { data: requests } = await supabase
+    .from('project_requests')
+    .select('*')
+    .eq('project_id', projectId)
+    .order('created_at', { ascending: false })
 
   return (
     <div className="p-8 max-w-2xl">
@@ -430,6 +437,35 @@ export default async function ProjectDetailPage({
         {projectCredentials?.length === 0 && (
           <p className="text-sm text-gray-500">No credentials linked to this project yet.</p>
         )}
+      </div>  
+
+      <h2 className="mb-3 mt-8 font-semibold">Requests</h2>
+      <div className="space-y-2">
+        {requests?.map((req) => (
+          <div key={req.id} className="rounded border p-3 text-sm">
+            <p className="font-medium">{req.title}</p>
+            <p className="mt-1 text-gray-600">{req.description}</p>
+            <p className="mt-1 text-xs text-gray-400">
+              {new Date(req.created_at).toLocaleDateString('en-ZA')}
+            </p>
+            <form action={updateRequestStatus} className="mt-2 flex items-center gap-2">
+              <input type="hidden" name="id" value={req.id} />
+              <input type="hidden" name="project_id" value={project.id} />
+              <select name="status" defaultValue={req.status} className="rounded border border-gray-300 p-1 text-xs">
+                <option value="submitted">Submitted</option>
+                <option value="reviewing">Reviewing</option>
+                <option value="accepted">Accepted</option>
+                <option value="in_progress">In Progress</option>
+                <option value="declined">Declined</option>
+                <option value="completed">Completed</option>
+              </select>
+              <button type="submit" className="rounded bg-blue-600 px-3 py-1 text-xs text-white">
+                Update
+              </button>
+            </form>
+          </div>
+        ))}
+        {requests?.length === 0 && <p className="text-sm text-gray-500">No requests yet.</p>}
       </div>  
 
     <h2 className="mb-3 mt-8 font-semibold">Documents</h2>

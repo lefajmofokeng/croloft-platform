@@ -9,6 +9,7 @@ import QuotePricingTable from '@/components/quote-pricing-table'
 import SecretField from '@/components/secret-field'
 import { credentialTypeLabel, credentialEnvironmentLabel } from '@/lib/credential-options'
 import MetricsSection from '@/components/metrics-section'
+import { submitProjectRequest } from '../actions'
 
 type LineItem = { label: string; price: number; recurring?: boolean }
 type HourlyItem = { label: string; rate: number; unit: string }
@@ -81,6 +82,12 @@ export default async function PortalProjectDetailPage({
         .eq('project_id', projectId)
         .order('period_date', { ascending: true })
     : { data: null }
+
+  const { data: requests } = await supabase
+    .from('project_requests')
+    .select('*')
+    .eq('project_id', projectId)
+    .order('created_at', { ascending: false })
 
   return (
     <div className="p-8 max-w-2xl">
@@ -270,6 +277,46 @@ export default async function PortalProjectDetailPage({
           </div>
         </div>
       )}
+
+      <h2 className="mb-3 mt-8 font-semibold">Requests</h2>
+      <form action={submitProjectRequest} className="mb-4 space-y-2 rounded border p-4">
+        <input type="hidden" name="project_id" value={project.id} />
+        <input
+          type="text"
+          name="title"
+          required
+          placeholder="e.g. Change the logo colour"
+          className="w-full rounded border border-gray-300 p-2 text-sm"
+        />
+        <textarea
+          name="description"
+          required
+          rows={3}
+          placeholder="Tell us what you'd like changed or added"
+          className="w-full rounded border border-gray-300 p-2 text-sm"
+        />
+        <button type="submit" className="rounded bg-blue-600 px-4 py-2 text-sm text-white">
+          Submit Request
+        </button>
+      </form>
+
+      <div className="space-y-2">
+        {requests?.map((req) => (
+          <div key={req.id} className="rounded border p-3 text-sm">
+            <div className="flex items-center justify-between">
+              <p className="font-medium">{req.title}</p>
+              <span className="rounded bg-gray-100 px-2 py-0.5 text-xs capitalize">
+                {req.status.replace('_', ' ')}
+              </span>
+            </div>
+            <p className="mt-1 text-gray-600">{req.description}</p>
+            <p className="mt-1 text-xs text-gray-400">
+              {new Date(req.created_at).toLocaleDateString('en-ZA')}
+            </p>
+          </div>
+        ))}
+        {requests?.length === 0 && <p className="text-sm text-gray-500">No requests yet.</p>}
+      </div>
     
       <h2 className="mb-3 mt-8 font-semibold">Documents</h2>
       <div className="space-y-2">

@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { revalidatePath } from 'next/cache'
 
 export async function getDocumentDownloadUrl(documentId: string) {
   const supabase = await createClient()
@@ -59,4 +60,22 @@ export async function getClientDocumentVersionUrl(storagePath: string, fileName:
 
   if (error || !data) return { error: 'Could not load file' }
   return { url: data.signedUrl }
+}
+
+export async function submitProjectRequest(formData: FormData): Promise<void> {
+  const supabase = await createClient()
+
+  const project_id = formData.get('project_id') as string
+  const title = formData.get('title') as string
+  const description = formData.get('description') as string
+
+  if (!project_id || !title?.trim() || !description?.trim()) return
+
+  await supabase.from('project_requests').insert({
+    project_id,
+    title: title.trim(),
+    description: description.trim(),
+  })
+
+  revalidatePath(`/portal/projects/${project_id}`)
 }

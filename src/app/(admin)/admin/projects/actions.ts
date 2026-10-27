@@ -423,3 +423,17 @@ export async function getDocumentVersionUrl(storagePath: string, fileName: strin
   if (error || !data) return { error: 'Could not load file' }
   return { url: data.signedUrl }
 }
+
+export async function updateRequestStatus(formData: FormData): Promise<void> {
+  const supabase = await createClient()
+
+  const id = formData.get('id') as string
+  const project_id = formData.get('project_id') as string
+  const status = formData.get('status') as string
+
+  if (!id || !status) return
+
+  await supabase.from('project_requests').update({ status }).eq('id', id)
+
+  revalidatePath(`/admin/projects/${project_id}`)
+}

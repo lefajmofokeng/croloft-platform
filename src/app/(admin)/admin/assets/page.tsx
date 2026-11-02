@@ -4,6 +4,7 @@ import ExpiryBadge from '@/components/expiry-badge'
 import ConfirmSubmitButton from '@/components/confirm-submit-button'
 import { assetTypeLabel, assetStatusLabel } from '@/lib/asset-options'
 import { deleteAsset } from './actions'
+import PrintAssetsButton from '@/components/print-assets-button'
 
 export default async function AdminAssetsPage() {
   const supabase = await createClient()
@@ -17,9 +18,14 @@ export default async function AdminAssetsPage() {
     <div className="p-8">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold">Assets</h1>
-        <Link href="/admin/assets/new" className="rounded bg-blue-600 px-4 py-2 text-white">
-          + Add Asset
-        </Link>
+        <div className="flex items-center gap-3">
+          {assets && assets.length > 0 && (
+            <PrintAssetsButton assets={assets} clientName="All Clients" />
+          )}
+          <Link href="/admin/assets/new" className="rounded bg-blue-600 px-4 py-2 text-white">
+            + Add Asset
+          </Link>
+        </div>
       </div>
 
       <div className="space-y-2">

@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { updateAsset, deleteAsset } from '../../actions'
 import ConfirmSubmitButton from '@/components/confirm-submit-button'
 import { ASSET_TYPES, ASSET_STATUSES } from '@/lib/asset-options'
+import PrintAssetsButton from '@/components/print-assets-button'
 
 export default async function EditAssetPage({
   params,
@@ -30,10 +31,18 @@ export default async function EditAssetPage({
 
   return (
     <div className="p-8 max-w-2xl">
-      <h1 className="mb-1 text-2xl font-bold">Edit Asset</h1>
-      <p className="mb-6 text-sm text-gray-500">
-        {asset.profiles?.full_name || asset.profiles?.email || `${asset.guest_name} (guest)`}
-      </p>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="mb-1 text-2xl font-bold">Edit Asset</h1>
+          <p className="text-sm text-gray-500">
+            {asset.profiles?.full_name || asset.profiles?.email || `${asset.guest_name} (guest)`}
+          </p>
+        </div>
+        <PrintAssetsButton
+          assets={[asset]}
+          clientName={asset.profiles?.full_name || asset.profiles?.email || asset.guest_name || ''}
+        />
+      </div>
 
       <form action={updateAsset} className="mb-4 space-y-4 rounded border p-4">
         <input type="hidden" name="id" value={asset.id} />

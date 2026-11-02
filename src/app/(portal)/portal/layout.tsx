@@ -10,6 +10,7 @@ const navItems = [
   { label: 'Quotes', href: '/portal/quotes' },
   { label: 'Invoices', href: '/portal/invoices' },
   { label: 'Credentials', href: '/portal/credentials' },
+  { label: 'Equipment', href: '/portal/assets' },
   { label: 'Support', href: '/portal/support' },
 ]
 

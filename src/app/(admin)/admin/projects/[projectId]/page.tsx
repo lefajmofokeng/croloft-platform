@@ -11,6 +11,7 @@ import MetricForm from '../metric-form'
 import MetricsSection from '@/components/metrics-section'
 import { deleteMetric } from '../metrics-actions'
 import { updateRequestStatus } from '../actions'
+import AnalyticsSection from '@/components/analytics-section'
 
 type LineItem = { label: string; price: number; recurring?: boolean }
 type HourlyItem = { label: string; rate: number; unit: string }
@@ -92,6 +93,15 @@ export default async function ProjectDetailPage({
     .select('*')
     .eq('project_id', projectId)
     .order('created_at', { ascending: false })
+
+  const { data: analyticsEvents } = project.show_analytics
+    ? await supabase
+        .from('analytics_events')
+        .select('path, visitor_id, visited_at')
+        .eq('project_id', projectId)
+        .gte('visited_at', new Date(Date.now() - 366 * 86400000).toISOString())
+        .order('visited_at', { ascending: true })
+    : { data: null }  
 
   return (
     <div className="p-8 max-w-2xl">
@@ -221,6 +231,10 @@ export default async function ProjectDetailPage({
               <input type="checkbox" name="show_metrics" defaultChecked={project.show_metrics} />
               Show Performance
             </label>
+            <label className="flex items-center gap-2">
+              <input type="checkbox" name="show_analytics" defaultChecked={project.show_analytics} />
+              Show Analytics
+            </label>
           </div>
           <p className="mt-1 text-xs text-gray-400">
             Turn off Timeline/Changelog for simpler engagements. Turn on Domain &amp; SSL for web/ecommerce projects.
@@ -291,7 +305,7 @@ export default async function ProjectDetailPage({
         confirmMessage="This will also delete its timeline updates and documents. This cannot be undone."
       />
 
-            {project.show_changelog && (
+      {project.show_changelog && (
         <>
       <h2 className="mb-3 mt-8 font-semibold">Changelog</h2>
       <form action={addChangelogEntry} className="mb-4 flex gap-2 rounded border p-4">
@@ -437,7 +451,34 @@ export default async function ProjectDetailPage({
         {projectCredentials?.length === 0 && (
           <p className="text-sm text-gray-500">No credentials linked to this project yet.</p>
         )}
-      </div>  
+      </div> 
+
+      {project.show_analytics && (
+      <div className="mb-8 rounded border p-4">
+        <h2 className="mb-2 font-semibold">Analytics Tracking Code</h2>
+        <p className="mb-2 text-sm text-gray-500">
+          Paste this just before the closing <code>&lt;/body&gt;</code> tag on every page you want tracked.
+        </p>
+        <pre className="overflow-x-auto rounded bg-gray-900 p-3 text-xs text-gray-100">
+        {`<script>
+        (function() {
+          var k = '${project.analytics_site_key}';
+          var v = localStorage.getItem('croloft_vid');
+          if (!v) { v = crypto.randomUUID(); localStorage.setItem('croloft_vid', v); }
+          fetch('${process.env.NEXT_PUBLIC_SITE_URL}/api/track', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ site_key: k, path: location.pathname, visitor_id: v })
+          }).catch(function() {});
+        })();
+        </script>`}
+          </pre>
+
+          <div className="mt-4">
+            <AnalyticsSection events={analyticsEvents || []} />
+          </div>  
+        </div>
+      )} 
 
       <h2 className="mb-3 mt-8 font-semibold">Requests</h2>
       <div className="space-y-2">

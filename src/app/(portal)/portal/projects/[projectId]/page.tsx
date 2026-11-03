@@ -10,6 +10,7 @@ import SecretField from '@/components/secret-field'
 import { credentialTypeLabel, credentialEnvironmentLabel } from '@/lib/credential-options'
 import MetricsSection from '@/components/metrics-section'
 import { submitProjectRequest } from '../actions'
+import AnalyticsSection from '@/components/analytics-section'
 
 type LineItem = { label: string; price: number; recurring?: boolean }
 type HourlyItem = { label: string; rate: number; unit: string }
@@ -88,6 +89,15 @@ export default async function PortalProjectDetailPage({
     .select('*')
     .eq('project_id', projectId)
     .order('created_at', { ascending: false })
+    
+  const { data: analyticsEvents } = project.show_analytics
+    ? await supabase
+        .from('analytics_events')
+        .select('path, visitor_id, visited_at')
+        .eq('project_id', projectId)
+        .gte('visited_at', new Date(Date.now() - 366 * 86400000).toISOString())
+        .order('visited_at', { ascending: true })
+    : { data: null }
 
   return (
     <div className="p-8 max-w-2xl">
@@ -317,6 +327,13 @@ export default async function PortalProjectDetailPage({
         ))}
         {requests?.length === 0 && <p className="text-sm text-gray-500">No requests yet.</p>}
       </div>
+
+      {project.show_analytics && (
+        <div className="mb-8 rounded border p-4">
+          <h2 className="mb-3 font-semibold">Analytics</h2>
+          <AnalyticsSection events={analyticsEvents || []} />
+        </div>
+      )}
     
       <h2 className="mb-3 mt-8 font-semibold">Documents</h2>
       <div className="space-y-2">

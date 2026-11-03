@@ -239,6 +239,7 @@ export async function updateProject(formData: FormData): Promise<void> {
   const show_changelog = formData.get('show_changelog') === 'on'
   const show_domain_ssl = formData.get('show_domain_ssl') === 'on'
   const show_metrics = formData.get('show_metrics') === 'on'
+  const show_analytics = formData.get('show_analytics') === 'on'
   const domain_name = formData.get('domain_name') as string
   const registrar = formData.get('registrar') as string
   const domain_expiry = formData.get('domain_expiry') as string
@@ -266,6 +267,7 @@ export async function updateProject(formData: FormData): Promise<void> {
       show_changelog,
       show_domain_ssl,
       show_metrics,
+      show_analytics,
       domain_name: domain_name?.trim() || null,
       registrar: registrar?.trim() || null,
       domain_expiry: domain_expiry || null,

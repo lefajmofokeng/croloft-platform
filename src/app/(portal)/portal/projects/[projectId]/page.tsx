@@ -98,6 +98,11 @@ export default async function PortalProjectDetailPage({
         .gte('visited_at', new Date(Date.now() - 366 * 86400000).toISOString())
         .order('visited_at', { ascending: true })
     : { data: null }
+  
+  const { count: credentialCount } = await supabase
+    .from('access_credentials')
+    .select('id', { count: 'exact', head: true })
+    .eq('project_id', projectId)
 
   return (
     <div className="p-8 max-w-2xl">
@@ -237,6 +242,20 @@ export default async function PortalProjectDetailPage({
         showTimeline={project.show_timeline}
         showChangelog={project.show_changelog}
         documents={(documents || []).map((d) => ({ name: d.name, description: d.description }))}
+        domainName={project.domain_name}
+        registrar={project.registrar}
+        domainExpiry={project.domain_expiry}
+        sslProvider={project.ssl_provider}
+        sslExpiry={project.ssl_expiry}
+        hostingProvider={project.hosting_provider}
+        dnsProvider={project.dns_provider}
+        showDomainSsl={project.show_domain_ssl}
+        metrics={metrics || []}
+        showMetrics={project.show_metrics}
+        analyticsEvents={analyticsEvents || []}
+        showAnalytics={project.show_analytics}
+        requests={requests || []}
+        hasCredentials={(credentialCount || 0) > 0}
       />
 
       {project.show_metrics && (

@@ -22,6 +22,7 @@ type Product = {
   id: string
   name: string
   description: string | null
+  client_note: string | null
   pricing_addons: Addon[]
 }
 
@@ -196,7 +197,11 @@ export default function AdminQuoteCalculator({
     <div className="mx-auto max-w-2xl p-8">
       <h1 className="mb-1 text-3xl font-bold">{product.name}</h1>
       {product.description && <p className="mb-6 text-gray-500">{product.description}</p>}
-
+      {product.client_note && (
+        <div className="mb-6 rounded border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+          {product.client_note}
+        </div>
+      )}
       <div className="space-y-6">
         {groupedAddons.map((group, gi) => (
           <div key={gi}>

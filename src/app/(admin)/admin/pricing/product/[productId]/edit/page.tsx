@@ -26,6 +26,15 @@ export default async function EditProductPage({
       <h1 className="text-2xl font-bold mb-6">Edit Product</h1>
 
       <form action={updateProduct} className="mb-4 space-y-3 rounded border p-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Note to Clients (optional)</label>
+          <textarea
+            name="client_note" defaultValue={product.client_note || ''}
+            rows={2}
+            placeholder="Shown at the top of the calculator, e.g. a heads-up about what's required or recommended"
+            className="mt-1 w-full rounded border border-gray-300 p-2"
+          />
+        </div>
         <input type="hidden" name="id" value={product.id} />
         <input type="hidden" name="category_id" value={product.category_id} />
         <div>

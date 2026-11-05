@@ -49,6 +49,7 @@ export async function createProduct(formData: FormData): Promise<void> {
   const category_id = formData.get('category_id') as string
   const name = formData.get('name') as string
   const description = formData.get('description') as string
+  const client_note = formData.get('client_note') as string
   const base_price = '0'
   const monthly_price = '0'
   
@@ -60,6 +61,7 @@ export async function createProduct(formData: FormData): Promise<void> {
     category_id,
     name: name.trim(),
     description: description?.trim() || null,
+    client_note: client_note?.trim() || null,
     base_price: parseFloat(base_price) || 0,
     monthly_price: parseFloat(monthly_price) || 0,
   })
@@ -172,6 +174,7 @@ export async function updateProduct(formData: FormData): Promise<void> {
   const category_id = formData.get('category_id') as string
   const name = formData.get('name') as string
   const description = formData.get('description') as string
+  const client_note = formData.get('client_note') as string
   // base_price and monthly_price are no longer editable here — they're
   // computed automatically from "Included" add-ons, so we simply don't touch them
   
@@ -184,6 +187,7 @@ export async function updateProduct(formData: FormData): Promise<void> {
     .update({
       name: name.trim(),
       description: description?.trim() || null,
+      client_note: client_note?.trim() || null,
     })
     .eq('id', id)
 

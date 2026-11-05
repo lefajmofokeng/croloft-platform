@@ -24,6 +24,15 @@ export default async function NewProductPage({
         <p className="rounded border border-blue-100 bg-blue-50 p-3 text-sm text-gray-600">
           Base price and monthly price will be calculated automatically once you add &quot;Included&quot; add-ons to this product after creating it.
         </p>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Note to Clients (optional)</label>
+          <textarea
+            name="client_note"
+            rows={2}
+            placeholder="Shown at the top of the calculator, e.g. a heads-up about what's required or recommended"
+            className="mt-1 w-full rounded border border-gray-300 p-2"
+          />
+        </div>
         <button type="submit" className="rounded bg-blue-600 px-4 py-2 text-white">
           Add Product
         </button>
